@@ -105,7 +105,6 @@ export const Home = (): JSX.Element => {
         direction="column"
         alignItems="center"
         justifyContent="center"
-        spacing={2}
         sx={{ height: "100%" }}
       >
         <Box
@@ -119,7 +118,7 @@ export const Home = (): JSX.Element => {
               `2px solid ${theme.palette.secondary.main}`,
           }}
         />
-        <Stack direction="row" sx={{ height: 42 }}>
+        <Stack direction="row" sx={{ mt: 4, height: 60 }}>
           {buttons[currentButtonIndex].transitionArray.map((col, i) => (
             <Typography variant="h3" color="secondary">
               <TextTransition
@@ -132,7 +131,7 @@ export const Home = (): JSX.Element => {
             </Typography>
           ))}
         </Stack>
-        <Typography variant="h6">
+        <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
           {buttons[currentButtonIndex].caption}
         </Typography>
         {buttons.map((button, index) => (
@@ -141,6 +140,7 @@ export const Home = (): JSX.Element => {
             underline="none"
             target="_blank"
             rel="noopener noreferrer"
+            sx={{ mt: 2 }}
           >
             <Button
               variant="outlined"

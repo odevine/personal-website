@@ -111,7 +111,7 @@ export const Home = (): JSX.Element => {
         <Box
           component="img"
           alt="picture of me"
-          src="../../../public/test-avatar.jpg"
+          src="/test-avatar.jpg"
           sx={{
             height: 240,
             borderRadius: 8,

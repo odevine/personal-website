@@ -1,6 +1,6 @@
 import { Container, Stack, Button, Typography, Link, Box } from "@mui/material";
 import { useState } from "react";
-import TextTransition, { presets } from "react-text-transition";
+import TextTransition from "react-text-transition";
 
 const buttons: Array<{
   transitionArray: string[];

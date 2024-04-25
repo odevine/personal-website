@@ -1,5 +1,4 @@
 import { useRoutes } from "raviger";
-import { Box } from "@mui/material";
 
 import { Home, ThemeToggle } from "@/Components";
 

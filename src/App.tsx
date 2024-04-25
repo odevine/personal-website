@@ -3,13 +3,15 @@ import { useRoutes } from "raviger";
 import { Home, ThemeToggle } from "@/Components";
 
 const routes = {
-    "/": () => <Home />,
-}
+  "/": () => <Home />,
+};
 
 export const App = (): JSX.Element => {
-    const route = useRoutes(routes)
-    return <>
-        <ThemeToggle />
-        {route}
+  const route = useRoutes(routes);
+  return (
+    <>
+      <ThemeToggle />
+      {route}
     </>
-}
+  );
+};

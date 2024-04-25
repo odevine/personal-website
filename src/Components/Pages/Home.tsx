@@ -118,9 +118,9 @@ export const Home = (): JSX.Element => {
               `2px solid ${theme.palette.secondary.main}`,
           }}
         />
-        <Stack direction="row" sx={{ mt: 4, height: 60 }}>
+        <Stack direction="row" sx={{ mt: 4, height: 48 }}>
           {buttons[currentButtonIndex].transitionArray.map((col, i) => (
-            <Typography variant="h3" color="secondary">
+            <Typography variant="h4" color="secondary">
               <TextTransition
                 inline
                 key={i}
@@ -131,7 +131,7 @@ export const Home = (): JSX.Element => {
             </Typography>
           ))}
         </Stack>
-        <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
+        <Typography variant="h6" sx={{ mt: 3, mb: 2, textAlign: "center" }}>
           {buttons[currentButtonIndex].caption}
         </Typography>
         {buttons.map((button, index) => (

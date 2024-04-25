@@ -44,7 +44,7 @@ const buttons: Array<{
       "e",
       ".dev",
     ],
-    caption: "built in a couple hours to try out vite",
+    caption: "built to try out ⚡ vite ⚡",
     buttonText: "website",
     link: "",
   },
@@ -136,11 +136,15 @@ export const Home = (): JSX.Element => {
         </Typography>
         {buttons.map((button, index) => (
           <Link
-            href={button.link}
-            underline="none"
-            target="_blank"
-            rel="noopener noreferrer"
             sx={{ mt: 2 }}
+            {...(button.link !== ""
+              ? {
+                  href: button.link,
+                  underline: "none",
+                  target: "_blank",
+                  rel: "noopener noreferrer",
+                }
+              : {})}
           >
             <Button
               variant="outlined"

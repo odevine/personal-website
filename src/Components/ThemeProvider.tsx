@@ -71,6 +71,41 @@ export const ThemeProvider = (props: PropsWithChildren) => {
                 },
               } as PaletteColorOptions)),
         },
+        components: {
+          MuiCssBaseline: {
+            styleOverrides: {
+              html: {
+                "&::-webkit-scrollbar, & ::-webkit-scrollbar": {
+                  backgroundColor: "#403e41",
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                },
+                "&::-webkit-scrollbar-thumb, &::-webkit-scrollbar-thumb": {
+                  borderRadius: 6,
+                  backgroundColor: "#403e41",
+                  minHeight: 24,
+                  border: "2px solid #403e41",
+                },
+                "&::-webkit-scrollbar-thumb:focus, & ::-webkit-scrollbar-thumb:focus":
+                  {
+                    backgroundColor: "#2d2a2e",
+                  },
+                "&::-webkit-scrollbar-thumb:active, &::-webkit-scrollbar-thumb:active":
+                  {
+                    backgroundColor: "#2d2a2e",
+                  },
+                "&::-webkit-scrollbar-thumb:hover, & ::-webkit-scrollbar-thumb:hover":
+                  {
+                    backgroundColor: "#2d2a2e",
+                  },
+                "&::-webkit-scrollbar-corner, &::-webkit-scrollbar-corner": {
+                  backgroundColor: "#403e41",
+                },
+              },
+            },
+          },
+        },
       }),
     [mode],
   );

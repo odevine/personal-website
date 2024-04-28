@@ -6,7 +6,8 @@ const buttons: Array<{
   transitionArray: string[];
   caption: string;
   buttonText: string;
-  link: string;
+  link?: string;
+  action?: () => void;
 }> = [
   {
     transitionArray: [
@@ -26,7 +27,6 @@ const buttons: Array<{
     ],
     caption: "software developer in brunswick, maine",
     buttonText: "me",
-    link: "",
   },
   {
     transitionArray: [
@@ -46,7 +46,6 @@ const buttons: Array<{
     ],
     caption: "built to try out ⚡ vite ⚡",
     buttonText: "website",
-    link: "",
   },
   {
     transitionArray: [
@@ -69,6 +68,12 @@ const buttons: Array<{
     link: "mailto: owen@devine.dev",
   },
   {
+    transitionArray: ["@", "o", "", "", "", "", "d", "e", "", "", "", "", ""],
+    caption: "it's like irc but worse?",
+    buttonText: "discord",
+    link: "https://discord.com/users/98183996185255936",
+  },
+  {
     transitionArray: [
       "@",
       "o",
@@ -84,16 +89,17 @@ const buttons: Array<{
       "e",
       "",
     ],
-    caption: "where my bad ideas go to die",
+    caption: "a graveyard of good intentions",
     buttonText: "github",
     link: "https://github.com/odevine",
   },
-  {
-    transitionArray: ["@", "o", "", "", "", "", "d", "e", "", "", "", "", ""],
-    caption: "it's like irc but worse?",
-    buttonText: "discord",
-    link: "https://discord.com/users/98183996185255936",
-  },
+  // TODO: actually have projects to list ehre
+  // {
+  //   transitionArray: ["", "o", "h", "", "", " ", "", "", "", "", "", "n", "o"],
+  //   caption: "half-baked but sometimes still cooking",
+  //   buttonText: "live projects",
+  //   action: () => navigate("/projects"),
+  // },
 ];
 
 export const Home = (): JSX.Element => {
@@ -105,7 +111,7 @@ export const Home = (): JSX.Element => {
         direction="column"
         alignItems="center"
         justifyContent="center"
-        sx={{ height: "100%" }}
+        sx={{ height: "100%", minHeight: 750 }}
       >
         <Box
           component="img"
@@ -120,7 +126,7 @@ export const Home = (): JSX.Element => {
         />
         <Stack direction="row" sx={{ mt: 4, height: 48 }}>
           {buttons[currentButtonIndex].transitionArray.map((col, i) => (
-            <Typography variant="h4" color="secondary">
+            <Typography variant="h4" color="secondary" key={i}>
               <TextTransition
                 inline
                 key={i}
@@ -136,8 +142,9 @@ export const Home = (): JSX.Element => {
         </Typography>
         {buttons.map((button, index) => (
           <Link
+            key={button.buttonText}
             sx={{ mt: 2 }}
-            {...(button.link !== ""
+            {...(button.link
               ? {
                   href: button.link,
                   underline: "none",
@@ -148,12 +155,17 @@ export const Home = (): JSX.Element => {
           >
             <Button
               variant="outlined"
-              key={button.buttonText}
               onMouseEnter={(): void => setCurrentButtonIndex(index)}
               sx={{
-                width: 120,
+                background: (theme) => theme.palette.background.paper,
+                width: 150,
                 textTransform: "none",
               }}
+              {...(button.action
+                ? {
+                    onClick: button.action,
+                  }
+                : {})}
             >
               {button.buttonText}
             </Button>

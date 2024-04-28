@@ -10,11 +10,6 @@ export const ThemeToggle = () => {
     <IconButton
       onClick={toggleTheme}
       color="secondary"
-      sx={{
-        position: "fixed",
-        top: 8,
-        left: 8,
-      }}
     >
       {mode === "light" ? <Brightness7Icon /> : <Brightness4Icon />}
     </IconButton>

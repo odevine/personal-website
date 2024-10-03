@@ -10,8 +10,17 @@ import { ThemeContext } from "@/ThemeContext";
 
 export const ThemeProvider = (props: PropsWithChildren) => {
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-  const defaultTheme =
-    localStorage.getItem("theme") ?? prefersDarkMode ? "dark" : "light";
+  const previousThemeMode = localStorage.getItem("theme");
+  let defaultTheme = "dark";
+
+  if (!prefersDarkMode) {
+    defaultTheme = "light";
+  }
+
+  if (previousThemeMode) {
+    defaultTheme = previousThemeMode;
+  }
+
   const [mode, setMode] = useState<PaletteMode>(defaultTheme as PaletteMode);
 
   useEffect(() => {
@@ -28,6 +37,33 @@ export const ThemeProvider = (props: PropsWithChildren) => {
     }),
     [mode],
   );
+
+  // Function to generate scrollbar styles
+  const scrollbarStyles = (mode: PaletteMode) => ({
+    html: {
+      "*::-webkit-scrollbar": {
+        width: 8,
+        height: 8,
+      },
+      "*::-webkit-scrollbar-track": {
+        backgroundColor: mode === "light" ? "#ccc9c3" : "#2d2a2e",
+      },
+      "*::-webkit-scrollbar-thumb": {
+        backgroundColor: mode === "light" ? "#999692" : "#524c54",
+        minHeight: 24,
+        minWidth: 24,
+      },
+      "*::-webkit-scrollbar-thumb:focus": {
+        backgroundColor: mode === "light" ? "#656461" : "#776e7a",
+      },
+      "*::-webkit-scrollbar-thumb:active": {
+        backgroundColor: mode === "light" ? "#656461" : "#776e7a",
+      },
+      "*::-webkit-scrollbar-thumb:hover": {
+        backgroundColor: mode === "light" ? "#656461" : "#776e7a",
+      },
+    },
+  });
 
   const theme = useMemo(
     () =>
@@ -73,37 +109,7 @@ export const ThemeProvider = (props: PropsWithChildren) => {
         },
         components: {
           MuiCssBaseline: {
-            styleOverrides: {
-              html: {
-                "&::-webkit-scrollbar, & ::-webkit-scrollbar": {
-                  backgroundColor: "#403e41",
-                  width: 12,
-                  height: 12,
-                  borderRadius: 6,
-                },
-                "&::-webkit-scrollbar-thumb, &::-webkit-scrollbar-thumb": {
-                  borderRadius: 6,
-                  backgroundColor: "#403e41",
-                  minHeight: 24,
-                  border: "2px solid #403e41",
-                },
-                "&::-webkit-scrollbar-thumb:focus, & ::-webkit-scrollbar-thumb:focus":
-                  {
-                    backgroundColor: "#2d2a2e",
-                  },
-                "&::-webkit-scrollbar-thumb:active, &::-webkit-scrollbar-thumb:active":
-                  {
-                    backgroundColor: "#2d2a2e",
-                  },
-                "&::-webkit-scrollbar-thumb:hover, & ::-webkit-scrollbar-thumb:hover":
-                  {
-                    backgroundColor: "#2d2a2e",
-                  },
-                "&::-webkit-scrollbar-corner, &::-webkit-scrollbar-corner": {
-                  backgroundColor: "#403e41",
-                },
-              },
-            },
+            styleOverrides: scrollbarStyles(mode),
           },
           MuiButton: {
             styleOverrides: {

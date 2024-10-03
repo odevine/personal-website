@@ -111,20 +111,20 @@ export const Home = (): JSX.Element => {
         direction="column"
         alignItems="center"
         justifyContent="center"
-        sx={{ height: "100%", minHeight: 750 }}
+        sx={{ height: "100%", minHeight: { xs: 600 } }}
       >
         <Box
           component="img"
           alt="picture of me"
           src="/images/me.jpg"
           sx={{
-            height: 240,
+            height: { xs: 140, sm: 200 },
             borderRadius: 8,
             border: (theme): string =>
               `2px solid ${theme.palette.secondary.main}`,
           }}
         />
-        <Stack direction="row" sx={{ mt: 4, height: 48 }}>
+        <Stack direction="row" sx={{ mt: { xs: 1, sm: 4 }, height: 48 }}>
           {buttons[currentButtonIndex].transitionArray.map((col, i) => (
             <Typography variant="h4" color="secondary" key={i}>
               <TextTransition

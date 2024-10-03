@@ -7,7 +7,7 @@ export const EDHTrackerAbout = () => (
       height: "calc(100vh - 96px)",
       overflowX: "auto",
       "::-webkit-scrollbar": {
-        display: "none",
+        // display: "none",
       },
     }}
   >
@@ -254,20 +254,18 @@ export const EDHTrackerAbout = () => (
           record our wins and losses, track deck categories, and settle any
           disputes with cold, hard data.
         </Typography>
-        <Stack direction="row" justifyContent="space-around">
-          <Box
-            component="img"
-            src="/images/edh-about-15.png"
-            maxWidth={"50%"}
-            marginX="auto"
-          />
-          <Box
-            component="img"
-            src="/images/edh-about-16.png"
-            maxWidth={"50%"}
-            marginX="auto"
-          />
-        </Stack>
+        <Box
+          component="img"
+          src="/images/edh-about-15.png"
+          maxWidth={"100%"}
+          marginX="auto"
+        />
+        <Box
+          component="img"
+          src="/images/edh-about-16.png"
+          maxWidth={"100%"}
+          marginX="auto"
+        />
         <Typography>
           But as the games piled up and the group grew more competitive, the
           limitations of the spreadsheet became impossible to ignore. Running

@@ -193,6 +193,11 @@ export const EDHTrackerAbout = () => (
           maxWidth={"100%"}
           marginX="auto"
         />
+        <Typography variant="caption" sx={{ textAlign: "center" }}>
+          <i>
+            graphic design is my ✨ <strong>passion</strong> ✨
+          </i>
+        </Typography>
         <Typography variant="h5" fontWeight={600}>
           The Data Expands
         </Typography>

@@ -105,6 +105,13 @@ export const ThemeProvider = (props: PropsWithChildren) => {
               },
             },
           },
+          MuiButton: {
+            styleOverrides: {
+              root: {
+                textTransform: "none",
+              },
+            }
+          }
         },
       }),
     [mode],

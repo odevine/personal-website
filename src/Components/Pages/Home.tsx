@@ -1,6 +1,7 @@
 import { Container, Stack, Button, Typography, Link, Box } from "@mui/material";
 import { useState } from "react";
 import TextTransition from "react-text-transition";
+import { navigate } from "raviger";
 
 const buttons: Array<{
   transitionArray: string[];
@@ -69,7 +70,7 @@ const buttons: Array<{
   },
   {
     transitionArray: ["@", "o", "", "", "", "", "d", "e", "", "", "", "", ""],
-    caption: "it's like irc but worse?",
+    caption: "this counts as social media, right?",
     buttonText: "discord",
     link: "https://discord.com/users/98183996185255936",
   },
@@ -93,13 +94,12 @@ const buttons: Array<{
     buttonText: "github",
     link: "https://github.com/odevine",
   },
-  // TODO: actually have projects to list ehre
-  // {
-  //   transitionArray: ["", "o", "h", "", "", " ", "", "", "", "", "", "n", "o"],
-  //   caption: "half-baked but sometimes still cooking",
-  //   buttonText: "live projects",
-  //   action: () => navigate("/projects"),
-  // },
+  {
+    transitionArray: ["", "o", "h", "", "", " ", "", "", "", "", "", "n", "o"],
+    caption: "half-baked but sometimes still cooking",
+    buttonText: "current projects",
+    action: () => navigate("/projects"),
+  },
 ];
 
 export const Home = (): JSX.Element => {
@@ -116,7 +116,7 @@ export const Home = (): JSX.Element => {
         <Box
           component="img"
           alt="picture of me"
-          src="/test-avatar.jpg"
+          src="/images/me.jpg"
           sx={{
             height: 240,
             borderRadius: 8,

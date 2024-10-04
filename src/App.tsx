@@ -33,7 +33,7 @@ export const App = (): JSX.Element => {
       ? prevLocation.split("/").filter(Boolean)
       : [];
 
-    return currentSegments.length < prevSegments.length;
+    return currentSegments.length <= prevSegments.length;
   };
 
   const transitions = useTransition(route, {

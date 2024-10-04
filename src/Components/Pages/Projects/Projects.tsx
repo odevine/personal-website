@@ -30,7 +30,8 @@ export const projectCards: ProjectCard[] = [
     description:
       "originally built to replace a spreadsheet, this online tool allows my magic the gathering playgroup to easily keep track of decks, record matches, and get a peek into overall statistics",
     path: "/projects/edh-tracker",
-    url: "https://edh.devine.dev",
+    urlButtonText: "repo",
+    url: "https://github.com/odevine/edh-tracker",
     component: <EDHTrackerAbout />,
   },
   {

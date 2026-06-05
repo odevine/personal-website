@@ -1,5 +1,27 @@
-import { PaletteMode, PaletteColorOptions } from "@mui/material";
+import { PaletteMode } from "@mui/material";
 import { createTheme, Theme } from "@mui/material/styles";
+
+// Syntax-highlight roles, mapped onto the Monokai accents below. Used to give
+// the home-page button text a pseudo-code, multi-color look.
+export type SyntaxToken =
+  | "keyword"
+  | "fn"
+  | "string"
+  | "number"
+  | "operator"
+  | "variable"
+  | "punctuation";
+
+export type SyntaxPalette = Record<SyntaxToken, string>;
+
+declare module "@mui/material/styles" {
+  interface Palette {
+    syntax: SyntaxPalette;
+  }
+  interface PaletteOptions {
+    syntax?: SyntaxPalette;
+  }
+}
 
 // Canonical Monokai Pro filter palettes, lifted from the official color
 // definitions (loctvl842/monokai-pro.nvim). Each filter shares the same set of
@@ -219,7 +241,16 @@ export const createAppTheme = (scheme: ColorScheme): Theme => {
         primary: palette.text,
         secondary: palette.dimmed1,
       },
-    } as { mode: PaletteMode } & Record<string, PaletteColorOptions>,
+      syntax: {
+        keyword: palette.accent1, // pink/red — keyword-like segments
+        fn: palette.accent4, // green — primary identifiers
+        string: palette.accent3, // yellow — string-like tails (e.g. .dev)
+        number: palette.accent6, // purple — constant-like segments
+        operator: palette.accent2, // orange — operators (@)
+        variable: palette.text, // default identifier color
+        punctuation: palette.dimmed2, // muted — separators (., space)
+      },
+    },
     components: {
       MuiCssBaseline: {
         styleOverrides: {

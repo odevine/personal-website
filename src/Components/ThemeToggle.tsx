@@ -16,7 +16,7 @@ import PaletteIcon from "@mui/icons-material/Palette";
 import { useTheme } from "@/ThemeContext";
 import { colorSchemes, getScheme } from "@/themes";
 
-// A small preview of a filter: its paper colour, ringed by the primary accent,
+// A small preview of a filter: its paper color, ringed by the primary accent,
 // with a dot of the secondary accent — the same roles used across the app.
 const SchemeSwatch = ({ name }: { name: string }) => {
   const { palette } = getScheme(name);

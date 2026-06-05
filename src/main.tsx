@@ -23,6 +23,18 @@ root.render(
               height: "100%",
             }
           },
+          // Disable the default cross-fade so the ripple clip-path is the
+          // only animation, and stack the incoming theme on top of the old one.
+          "::view-transition-old(root), ::view-transition-new(root)": {
+            animation: "none",
+            mixBlendMode: "normal",
+          },
+          "::view-transition-old(root)": {
+            zIndex: 1,
+          },
+          "::view-transition-new(root)": {
+            zIndex: 9999,
+          },
         }}
       />
       <App />

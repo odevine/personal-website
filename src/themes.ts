@@ -222,13 +222,25 @@ export const getScheme = (name: string | null): ColorScheme =>
   colorSchemes.find((scheme) => scheme.name === defaultSchemeName) ??
   colorSchemes[0];
 
+export const monoFont = '"Noto Mono", monospace';
+const bodyFont = '"Inter", system-ui, sans-serif';
+
 /** Build a full MUI theme from a Monokai Pro filter. */
 export const createAppTheme = (scheme: ColorScheme): Theme => {
   const { palette } = scheme;
   return createTheme({
     typography: {
-      fontFamily: "Noto Mono, monospace",
+      fontFamily: bodyFont,
+      h1: { fontFamily: monoFont, fontWeight: 600, letterSpacing: "-0.02em" },
+      h2: { fontFamily: monoFont, fontWeight: 600, letterSpacing: "-0.02em" },
+      h3: { fontFamily: monoFont, fontWeight: 600, letterSpacing: "-0.02em" },
+      h4: { fontFamily: monoFont, fontWeight: 600 },
+      h5: { fontFamily: monoFont, fontWeight: 600 },
+      h6: { fontFamily: monoFont },
+      button: { fontFamily: monoFont, textTransform: "none" },
+      caption: { fontSize: "0.8125rem", lineHeight: 1.6 },
     },
+    shape: { borderRadius: 10 },
     palette: {
       mode: scheme.mode,
       primary: { main: palette.accent6 },

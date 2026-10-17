@@ -1,0 +1,49 @@
+{
+  "projects": [
+    {
+      "slug": "edh-tracker",
+      "repo": "odevine/edh-tracker",
+      "screenshots": [
+        "edh-card-header.png",
+        "edh-about-1.png",
+        "edh-about-2.png",
+        "edh-about-3.png",
+        "edh-about-4.png",
+        "edh-about-5.png",
+        "edh-about-6.png",
+        "edh-about-7.png",
+        "edh-about-8.png",
+        "edh-about-9.png",
+        "edh-about-10.png",
+        "edh-about-11.png",
+        "edh-about-12.png",
+        "edh-about-13.png",
+        "edh-about-14.png",
+        "edh-about-15.png",
+        "edh-about-16.png",
+        "edh-about-17.png"
+      ]
+    },
+    {
+      "slug": "personal-website",
+      "repo": "odevine/personal-website",
+      "screenshots": ["website-card-header.png"]
+    },
+    {
+      "slug": "mimic",
+      "repo": "odevine/mimic",
+      "screenshots": []
+    },
+    {
+      "slug": "mimic-templates",
+      "repo": "odevine/mimic-templates",
+      "screenshots": []
+    },
+    {
+      "slug": "impasto",
+      "repo": "odevine/impasto",
+      "screenshots": []
+    }
+  ],
+  "pictures": ["avatar.png"]
+}

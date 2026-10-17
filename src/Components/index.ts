@@ -1,6 +1,2 @@
-// Pages
-export * from "./Pages";
-
+export * from "./Desktop";
 export * from "./ThemeProvider";
-export * from "./ThemeToggle";
-export * from "./Toolbar";

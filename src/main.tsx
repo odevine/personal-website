@@ -8,6 +8,15 @@ import "@fontsource/inter/500.css";
 import { ThemeProvider } from "@/Components";
 import { App } from "./App";
 
+// The site is a single page, so addresses left over from older links go back to the root
+if (window.location.pathname !== "/") {
+  window.history.replaceState(
+    null,
+    "",
+    "/" + window.location.search + window.location.hash,
+  );
+}
+
 const root = createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(

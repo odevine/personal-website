@@ -1,6 +1,8 @@
 import { PaletteMode } from "@mui/material";
 import { createTheme, Theme } from "@mui/material/styles";
 
+import { Settings, defaultSettings } from "@/settings";
+
 // Syntax-highlight roles, mapped onto the Monokai accents below. Used to give
 // the home-page button text a pseudo-code, multi-color look.
 export type SyntaxToken =
@@ -216,6 +218,30 @@ export const colorSchemes: ColorScheme[] = [
 
 export const defaultSchemeName = "pro";
 
+/** What the site falls back to when its theme file is deleted, not offered in the picker */
+export const monochromeScheme: ColorScheme = {
+  name: "monochrome",
+  label: "Monochrome",
+  mode: "dark",
+  palette: {
+    dark2: "#000000",
+    dark1: "#000000",
+    background: "#000000",
+    text: "#ffffff",
+    accent1: "#ffffff",
+    accent2: "#d0d0d0",
+    accent3: "#b0b0b0",
+    accent4: "#e8e8e8",
+    accent5: "#c0c0c0",
+    accent6: "#ffffff",
+    dimmed1: "#c0c0c0",
+    dimmed2: "#999999",
+    dimmed3: "#777777",
+    dimmed4: "#555555",
+    dimmed5: "#333333",
+  },
+};
+
 /** Resolve a scheme by name, falling back to the default. */
 export const getScheme = (name: string | null): ColorScheme =>
   colorSchemes.find((scheme) => scheme.name === name) ??
@@ -223,14 +249,23 @@ export const getScheme = (name: string | null): ColorScheme =>
   colorSchemes[0];
 
 export const monoFont = '"Noto Mono", monospace';
-const bodyFont = '"Inter", system-ui, sans-serif';
+const sansFont = '"Inter", system-ui, sans-serif';
 
 /** Build a full MUI theme from a Monokai Pro filter. */
-export const createAppTheme = (scheme: ColorScheme): Theme => {
+export const createAppTheme = (
+  scheme: ColorScheme,
+  settings: Settings = defaultSettings,
+): Theme => {
   const { palette } = scheme;
+  const bodyFont = settings.font === "mono" ? monoFont : sansFont;
+  // visible thumb is 6px wide, so 3px is a full pill
+  const thumbRadius = Math.min(3, settings.radius * 0.3);
+  const accent =
+    settings.accent === "default" ? palette.accent6 : palette[settings.accent];
   return createTheme({
     typography: {
       fontFamily: bodyFont,
+      fontSize: settings.fontSize,
       h1: { fontFamily: monoFont, fontWeight: 600, letterSpacing: "-0.02em" },
       h2: { fontFamily: monoFont, fontWeight: 600, letterSpacing: "-0.02em" },
       h3: { fontFamily: monoFont, fontWeight: 600, letterSpacing: "-0.02em" },
@@ -240,10 +275,10 @@ export const createAppTheme = (scheme: ColorScheme): Theme => {
       button: { fontFamily: monoFont, textTransform: "none" },
       caption: { fontSize: "0.8125rem", lineHeight: 1.6 },
     },
-    shape: { borderRadius: 10 },
+    shape: { borderRadius: settings.radius },
     palette: {
       mode: scheme.mode,
-      primary: { main: palette.accent6 },
+      primary: { main: accent },
       secondary: { main: palette.accent5 },
       background: {
         default: palette.dark1,
@@ -266,24 +301,25 @@ export const createAppTheme = (scheme: ColorScheme): Theme => {
     components: {
       MuiCssBaseline: {
         styleOverrides: {
-          html: {
-            "*::-webkit-scrollbar": { width: 8, height: 8 },
-            "*::-webkit-scrollbar-track": {
-              backgroundColor: palette.dimmed5,
-            },
-            "*::-webkit-scrollbar-thumb": {
-              backgroundColor: palette.dimmed4,
-              minHeight: 24,
-              minWidth: 24,
-            },
-            "*::-webkit-scrollbar-thumb:focus": {
-              backgroundColor: palette.dimmed3,
-            },
-            "*::-webkit-scrollbar-thumb:active": {
-              backgroundColor: palette.dimmed3,
-            },
-            "*::-webkit-scrollbar-thumb:hover": {
-              backgroundColor: palette.dimmed3,
+          "*::-webkit-scrollbar": { width: 12, height: 12 },
+          "*::-webkit-scrollbar-track, *::-webkit-scrollbar-corner": {
+            backgroundColor: "transparent",
+          },
+          // The transparent border insets the thumb, and its rounding follows the corner radius
+          "*::-webkit-scrollbar-thumb": {
+            backgroundColor: palette.dimmed4,
+            backgroundClip: "padding-box",
+            border: "3px solid transparent",
+            borderRadius: thumbRadius > 0 ? thumbRadius + 3 : 0,
+            minHeight: 32,
+            minWidth: 32,
+          },
+          "*::-webkit-scrollbar-thumb:hover, *::-webkit-scrollbar-thumb:active":
+            { backgroundColor: palette.dimmed3 },
+          "@supports not selector(::-webkit-scrollbar)": {
+            "*": {
+              scrollbarWidth: "thin",
+              scrollbarColor: `${palette.dimmed4} transparent`,
             },
           },
         },

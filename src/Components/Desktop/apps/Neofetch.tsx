@@ -19,6 +19,11 @@ const countFiles = (node: FsNode): number =>
     ? (node.children ?? []).reduce((sum, child) => sum + countFiles(child), 0)
     : 1;
 
+// Width at which the art and the text fit on one line
+const SIDE_BY_SIDE_PX = 700;
+const ART_ROW_HEIGHT = 1.15;
+const TEXT_ROW_HEIGHT = 1.7;
+
 const swatchKeys = [
   "accent1",
   "accent2",
@@ -66,6 +71,11 @@ export const Neofetch = ({
     ["Location", "maine"],
   ];
 
+  // the name, a rule, every row and the swatches, plus the gap above the swatches
+  const textHeight = (2 + rows.length + 1) * TEXT_ROW_HEIGHT + 0.6;
+  const artRows = asciiAvatar.split("\n").length;
+  const artScale = +(textHeight / (artRows * ART_ROW_HEIGHT)).toFixed(3);
+
   return (
     <Box
       sx={{
@@ -76,6 +86,7 @@ export const Neofetch = ({
         rowGap: 1,
         py: 0.5,
         whiteSpace: "pre",
+        containerType: "inline-size",
       }}
     >
       <Box
@@ -87,6 +98,10 @@ export const Neofetch = ({
           fontSize: 12,
           lineHeight: 1.15,
           color: "primary.main",
+          // side by side with the text, the art grows to the text's height with its shape kept
+          [`@container (min-width: ${SIDE_BY_SIDE_PX}px)`]: {
+            fontSize: `${artScale}em`,
+          },
         }}
       >
         {asciiAvatar}

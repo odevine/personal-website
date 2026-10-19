@@ -22,7 +22,13 @@ export interface DesktopState {
 }
 
 export type DesktopAction =
-  | { type: "open"; appId: AppId; area: Area }
+  | {
+      type: "open";
+      appId: AppId;
+      area: Area;
+      /** Puts the window's center here instead of at its usual place, as fractions of the area */
+      centerAt?: { x: number; y: number };
+    }
   | { type: "focus"; appId: AppId }
   | { type: "close"; appId: AppId }
   | { type: "minimize"; appId: AppId }
@@ -99,7 +105,13 @@ export const desktopReducer = (
       const { size, anchor } = appMeta[action.appId];
       const w = Math.min(size.w, action.area.w - MARGIN);
       const h = Math.min(size.h, action.area.h - MARGIN);
-      const { x, y } = place(anchor, w, h, action.area, state.windows.length);
+      const placed = place(anchor, w, h, action.area, state.windows.length);
+      const { x, y } = action.centerAt
+        ? {
+            x: action.centerAt.x * action.area.w - w / 2,
+            y: action.centerAt.y * action.area.h - h / 2,
+          }
+        : placed;
       const win: WindowState = {
         appId: action.appId,
         x: clamp(x, 0, action.area.w - w),

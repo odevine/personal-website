@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 
 import { AppId } from "../appMeta";
 import { AboutApp } from "./AboutApp";
+import { AchievementsApp } from "./AchievementsApp";
 import { EditorApp } from "./EditorApp";
 import { ExplorerApp } from "./ExplorerApp";
 import { SettingsApp } from "./SettingsApp";
@@ -17,4 +18,5 @@ export const appContent: Record<AppId, () => ReactNode> = {
   terminal: () => <TerminalApp />,
   explorer: () => <ExplorerApp />,
   settings: () => <SettingsApp />,
+  achievements: () => <AchievementsApp />,
 };

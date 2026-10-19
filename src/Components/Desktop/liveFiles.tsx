@@ -1,15 +1,21 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { defaultDockText } from "@/content/files";
+import { useUnlockWhenStable } from "@/achievements";
+import { defaultDockText, seedFiles } from "@/content/files";
 import { nodeExists } from "@/content/filesystem";
 import { useFilesystemVersion } from "@/content/useFilesystem";
-import { AppId, appIds, appMeta } from "./appMeta";
+import { useTheme } from "@/ThemeContext";
+import { AppId, appIds, appMeta, dockAppIds } from "./appMeta";
 import { useEditor } from "./EditorContext";
 
 export const ABOUT_PATH = "documents/about.md";
 export const CUSTOM_CSS_PATH = "documents/custom.css";
 export const NOTES_PATH = "documents/notes.md";
 export const DOCK_PATH = "system/dock.json";
+
+const defaultAbout = seedFiles.find(
+  (file) => file.path === ABOUT_PATH,
+)?.content;
 
 const resolveApp = (name: string): AppId | undefined =>
   appIds.find((id) => appMeta[id].aliases.includes(name));
@@ -19,7 +25,17 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 // Notes for the files that are saved in the browser or shown elsewhere
 export const DocumentNotes = () => {
-  const { setNote } = useEditor();
+  const { contents, setNote } = useEditor();
+  // an edit made in this visit counts, a saved one that was loaded does not
+  const about = contents[ABOUT_PATH];
+  const loadedAbout = useRef(about);
+  useUnlockWhenStable(
+    "live-edit",
+    about !== undefined &&
+      about !== defaultAbout &&
+      about !== loadedAbout.current,
+    about ?? "",
+  );
   useEffect(() => {
     setNote(ABOUT_PATH, {
       level: "ok",
@@ -42,11 +58,15 @@ export const CustomCssSync = () => {
     ? (contents[CUSTOM_CSS_PATH] ?? "")
     : "";
   const sheet = useMemo(() => new CSSStyleSheet(), []);
-  // ?nocss turns the file off in case it makes the page unusable
-  const disabled = useMemo(
-    () => new URLSearchParams(window.location.search).has("nocss"),
-    [],
+  const [rules, setRules] = useState(0);
+  const loadedText = useRef(text);
+  useUnlockWhenStable(
+    "stylist",
+    rules > 0 && text !== loadedText.current,
+    text,
   );
+  // without its theme file the site has no styling at all, so the file is left out too
+  const { themeMissing: disabled } = useTheme();
 
   useEffect(() => {
     document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
@@ -60,22 +80,25 @@ export const CustomCssSync = () => {
   useEffect(() => {
     if (disabled) {
       sheet.replaceSync("");
+      setRules(0);
       setNote(CUSTOM_CSS_PATH, {
         level: "warn",
-        message: "turned off because the address has ?nocss",
+        message: "turned off while system/theme.json is missing",
       });
       return;
     }
     try {
       sheet.replaceSync(text);
-      const rules = sheet.cssRules.length;
+      const count = sheet.cssRules.length;
+      setRules(count);
       setNote(CUSTOM_CSS_PATH, {
         level: "ok",
-        message: rules
-          ? `applied, ${rules} ${rules === 1 ? "rule" : "rules"}, saved in this browser`
+        message: count
+          ? `applied, ${count} ${count === 1 ? "rule" : "rules"}, saved in this browser`
           : "no rules yet, saved in this browser",
       });
     } catch (error) {
+      setRules(0);
       setNote(CUSTOM_CSS_PATH, {
         level: "error",
         message: (error as Error).message,
@@ -87,7 +110,15 @@ export const CustomCssSync = () => {
 };
 
 export type DockParse =
-  | { ok: true; apps: AppId[]; warnings: string[] }
+  | {
+      ok: true;
+      apps: AppId[];
+      warnings: string[];
+      /** The list names an app that does not exist */
+      hasUnknown: boolean;
+      /** The list left out the explorer, which was put back */
+      explorerAdded: boolean;
+    }
   | { ok: false; error: string };
 
 export const parseDockFile = (text: string): DockParse => {
@@ -103,27 +134,45 @@ export const parseDockFile = (text: string): DockParse => {
 
   const warnings: string[] = [];
   const apps: AppId[] = [];
+  let hasUnknown = false;
   for (const entry of data.apps) {
     const id = typeof entry === "string" ? resolveApp(entry) : undefined;
-    if (!id) warnings.push(`unknown app ${JSON.stringify(entry)}`);
-    else if (!apps.includes(id)) apps.push(id);
+    if (!id) {
+      hasUnknown = true;
+      warnings.push(`unknown app ${JSON.stringify(entry)}`);
+    } else if (!apps.includes(id)) apps.push(id);
   }
   // the explorer leads to every other app, so it is never removed
-  if (!apps.includes("explorer")) {
+  const explorerAdded = !apps.includes("explorer");
+  if (explorerAdded) {
     apps.push("explorer");
     warnings.push("files is always kept in the dock");
   }
-  return { ok: true, apps, warnings };
+  return { ok: true, apps, warnings, hasUnknown, explorerAdded };
 };
 
 // The apps shown in the dock, following dock.json and keeping the last valid list
 export const useDockApps = (): AppId[] => {
   const { contents, setNote } = useEditor();
   const text = contents[DOCK_PATH] ?? defaultDockText;
-  const last = useRef<AppId[]>(appIds);
+  const last = useRef<AppId[]>(dockAppIds);
 
   const parsed = useMemo(() => parseDockFile(text), [text]);
   if (parsed.ok) last.current = parsed.apps;
+
+  // a list that was already saved when the page loaded does not count
+  const loadedText = useRef(text);
+  const edited = text !== loadedText.current;
+  useUnlockWhenStable(
+    "ghost-app",
+    edited && parsed.ok && parsed.hasUnknown,
+    text,
+  );
+  useUnlockWhenStable(
+    "files-stays",
+    edited && parsed.ok && parsed.explorerAdded,
+    text,
+  );
 
   useEffect(() => {
     if (!parsed.ok) {

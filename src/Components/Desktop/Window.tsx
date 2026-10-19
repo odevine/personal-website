@@ -11,6 +11,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import FilterNoneIcon from "@mui/icons-material/FilterNone";
 import RemoveIcon from "@mui/icons-material/Remove";
 
+import { unlock } from "@/achievements";
 import { reducedMotion } from "@/motion";
 import { useContextMenu } from "./ContextMenu";
 import { useTheme } from "@/ThemeContext";
@@ -33,6 +34,8 @@ interface Props extends PropsWithChildren {
   selfScrolling?: boolean;
   /** No friction, so windows keep moving and bounce off the edges without losing speed */
   zeroGravity?: boolean;
+  /** The screen never redraws what a window moved off, so each move leaves a copy behind */
+  smear?: boolean;
   dispatch: Dispatch<DesktopAction>;
 }
 
@@ -42,6 +45,10 @@ const clamp = (value: number, min: number, max: number) =>
 // Distance of the resize grip from the corner, so it clears the rounded edge
 const gripInset = (theme: Theme) =>
   Math.max(4, theme.shape.borderRadius * 0.6 + 3);
+
+// Distance a window must move or resize before it leaves another copy, and how many are kept
+const SMEAR_STEP = 18;
+const MAX_SMEARS = 60;
 
 const MINIMIZE_MS = 280;
 // Fraction of its size a window shrinks to while retracting into the dock
@@ -54,6 +61,8 @@ const GRAB = 80;
 const THROW_MIN_SPEED = 0.4;
 const THROW_MAX_SPEED = 3.5;
 const THROW_FRICTION = 0.0028;
+// Hitting an edge at this speed or more counts as a hard throw
+const HURL_SPEED = 1.2;
 // Share of its speed a window keeps after hitting an edge
 const THROW_BOUNCE = 0.72;
 const THROW_STOP_SPEED = 0.03;
@@ -89,6 +98,7 @@ export const Window = ({
   visible,
   selfScrolling,
   zeroGravity = false,
+  smear = false,
   dispatch,
   children,
 }: Props) => {
@@ -126,6 +136,45 @@ export const Window = ({
   }, [animating]);
 
   const hidden = win.minimized && !animating;
+
+  // Copies of the window left where it has been, removed when the screen repaints again
+  const smears = useRef<HTMLElement[]>([]);
+  const lastSmear = useRef({ x: win.x, y: win.y, w: win.w, h: win.h });
+  useEffect(() => {
+    if (!smear) return;
+    return () => {
+      smears.current.forEach((copy) => copy.remove());
+      smears.current = [];
+    };
+  }, [smear]);
+  useEffect(() => {
+    const root = rootRef.current;
+    const area = root?.parentElement;
+    if (!smear || !root || !area || fullscreen || win.minimized || !visible) {
+      return;
+    }
+    const last = lastSmear.current;
+    const travelled = Math.max(
+      Math.abs(win.x - last.x),
+      Math.abs(win.y - last.y),
+      Math.abs(win.w - last.w),
+      Math.abs(win.h - last.h),
+    );
+    if (travelled < SMEAR_STEP) return;
+    lastSmear.current = { x: win.x, y: win.y, w: win.w, h: win.h };
+
+    // a copy of what is on screen now, set just under the window and out of reach
+    const copy = root.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+    copy.setAttribute("aria-hidden", "true");
+    copy.setAttribute("inert", "");
+    copy.style.pointerEvents = "none";
+    area.insertBefore(copy, root);
+    smears.current.push(copy);
+    if (smears.current.length > MAX_SMEARS) smears.current.shift()?.remove();
+    // only a change to where the window is should leave a copy
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [smear, win.x, win.y, win.w, win.h]);
 
   // Where the window retracts to: the center of its dock icon, in area coordinates
   const minimizedTransform = () => {
@@ -191,6 +240,8 @@ export const Window = ({
 
       const maxX = Math.max(0, bounds.w - current.w);
       const maxY = Math.max(0, bounds.h - current.h);
+      const hitEdge = x < 0 || x > maxX || y < 0 || y > maxY;
+      if (hitEdge && Math.hypot(vx, vy) >= HURL_SPEED) unlock("yeet");
       if (x < 0) {
         x = 0;
         vx = Math.abs(vx) * bounce;
@@ -408,6 +459,7 @@ export const Window = ({
   return (
     <Box
       ref={rootRef}
+      data-window={appId}
       aria-hidden={hidden || undefined}
       onPointerDown={focus}
       onPointerUp={() => resumeDrift()}

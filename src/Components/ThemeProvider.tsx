@@ -140,7 +140,45 @@ export const ThemeProvider = (props: PropsWithChildren) => {
           />
         )}
         {themeMissing && (
-          <GlobalStyles styles={{ html: { filter: "grayscale(1)" } }} />
+          <GlobalStyles
+            styles={{
+              // everything is black on white, square, one size and with no hover effects, like a page with no stylesheet
+              "html, body, body *, body *::before, body *::after": {
+                backgroundColor: "#fff !important",
+                backgroundImage: "none !important",
+                color: "#000 !important",
+                borderColor: "#000 !important",
+                borderRadius: "0 !important",
+                boxShadow: "none !important",
+                textShadow: "none !important",
+                backdropFilter: "none !important",
+                letterSpacing: "normal !important",
+                fontFamily: '"Courier New", Courier, monospace !important',
+                fontSize: "1rem !important",
+                fontWeight: "normal !important",
+                fontStyle: "normal !important",
+                textTransform: "none !important",
+                outlineColor: "#000 !important",
+                // nothing fades, animates, or changes the pointer, so hovering shows nothing new
+                opacity: "1 !important",
+                transition: "none !important",
+                animation: "none !important",
+                cursor: "auto !important",
+              },
+              // the dock lift and tooltips only appear on hover, and ripples would paint over icons
+              "body [data-dock-app]:hover": { transform: "none" },
+              "body .MuiTooltip-popper, body .MuiTouchRipple-root": {
+                display: "none !important",
+              },
+              "body a": {
+                color: "#0000ee !important",
+                textDecoration: "underline !important",
+              },
+              "body button, body input": {
+                border: "1px solid #000 !important",
+              },
+            }}
+          />
         )}
         {fontsMissing && (
           <GlobalStyles

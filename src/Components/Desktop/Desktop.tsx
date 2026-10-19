@@ -14,10 +14,17 @@ import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { useTheme as useMuiTheme } from "@mui/material/styles";
 
+import { unlock } from "@/achievements";
 import { nodeExists } from "@/content/filesystem";
 import { useFilesystemVersion } from "@/content/useFilesystem";
 import { useTheme } from "@/ThemeContext";
-import { AppId, appIds, appMeta } from "./appMeta";
+import {
+  AchievementWatchers,
+  AchievementsFileSync,
+} from "./AchievementEffects";
+import { AchievementToast } from "./AchievementToast";
+import { AppId, appIds, appMeta, dockAppIds } from "./appMeta";
+import { Presence } from "./Presence";
 import { appContent, appIcons } from "./apps/registry";
 import { DesktopContext } from "./DesktopContext";
 import { ContextMenuProvider, MenuEntry } from "./ContextMenu";
@@ -188,9 +195,14 @@ const DesktopShell = () => {
     const deepLink = appIds.find((id) =>
       appMeta[id].aliases.includes(requested ?? ""),
     );
-    // the last window opened is the one in front, and the only one shown on mobile
-    dispatch({ type: "open", appId: "editor", area });
-    dispatch({ type: "open", appId: deepLink ?? "about", area });
+    // the first window lands somewhere in the middle half of the screen
+    const near = () => 0.25 + Math.random() * 0.5;
+    dispatch({
+      type: "open",
+      appId: deepLink ?? "about",
+      area,
+      centerAt: { x: near(), y: near() },
+    });
   }, [area, mobile]);
 
   const [reveal, setReveal] = useState<{ path: string; nonce: number } | null>(
@@ -216,6 +228,8 @@ const DesktopShell = () => {
   const dockPresent = nodeExists(["system", "dock.json"]);
   // without system/gravity, windows float and keep whatever speed they have
   const zeroGravity = !nodeExists(["system", "gravity"]);
+  // without system/animations, moving a window leaves copies of it behind
+  const smear = !nodeExists(["system", "animations"]);
   const dockApps = useDockApps();
 
   const setDockApps = (apps: AppId[]) =>
@@ -231,8 +245,19 @@ const DesktopShell = () => {
   // Dropping an icon in a new place writes the order back to dock.json.
   // Apps that are only in the dock because they are open stay out of it,
   // unless that is the icon that was moved
-  const reorderDock = (order: AppId[], moved: AppId) =>
+  const reorderDock = (order: AppId[], moved: AppId) => {
     setDockApps(order.filter((id) => dockApps.includes(id) || id === moved));
+    unlock("interior-designer");
+  };
+
+  // windows stay in state on mobile even when only the top one is shown
+  useEffect(() => {
+    if (
+      dockAppIds.every((id) => state.windows.some((win) => win.appId === id))
+    ) {
+      unlock("full-house");
+    }
+  }, [state.windows]);
 
   const top = topWindow(state);
   const openApps = useMemo(
@@ -323,6 +348,8 @@ const DesktopShell = () => {
       }}
     >
       <ThemeFileSync />
+      <AchievementsFileSync />
+      <AchievementWatchers />
       <CustomCssSync />
       <DocumentNotes />
       <Box
@@ -336,6 +363,7 @@ const DesktopShell = () => {
         }}
       >
         <AccentBackdrop />
+        <Presence />
         {pattern && (
           <Box
             aria-hidden
@@ -368,11 +396,13 @@ const DesktopShell = () => {
               visible={!mobile || top?.appId === win.appId}
               selfScrolling={appMeta[win.appId].selfScrolling}
               zeroGravity={zeroGravity}
+              smear={smear}
               dispatch={dispatch}
             >
               {appContent[win.appId]()}
             </Window>
           ))}
+          <AchievementToast />
         </Box>
 
         {dockPresent && (

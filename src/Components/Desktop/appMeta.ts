@@ -1,5 +1,11 @@
 export type AppId =
-  "explorer" | "terminal" | "editor" | "about" | "viewer" | "settings";
+  | "explorer"
+  | "terminal"
+  | "editor"
+  | "about"
+  | "viewer"
+  | "settings"
+  | "achievements";
 
 export type Anchor = "center" | "left" | "right" | "top-left" | "top-right";
 
@@ -11,6 +17,8 @@ export interface AppMeta {
   anchor: Anchor;
   /** The app scrolls its own content, so the window body does not */
   selfScrolling?: boolean;
+  /** False for apps that are only reached from the applications folder and the terminal */
+  inDock?: boolean;
 }
 
 export const appMeta: Record<AppId, AppMeta> = {
@@ -53,6 +61,16 @@ export const appMeta: Record<AppId, AppMeta> = {
     size: { w: 440, h: 656 },
     anchor: "top-right",
   },
+  achievements: {
+    title: "achievements",
+    aliases: ["achievements", "ach"],
+    size: { w: 480, h: 560 },
+    anchor: "center",
+    inDock: false,
+  },
 };
 
 export const appIds = Object.keys(appMeta) as AppId[];
+
+/** The apps the dock starts with, and the ones that count towards having every app open */
+export const dockAppIds = appIds.filter((id) => appMeta[id].inDock !== false);

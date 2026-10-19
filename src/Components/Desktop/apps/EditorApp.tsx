@@ -8,7 +8,7 @@ import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 
-import { isSystemFile } from "@/content/files";
+import { isReadOnlyFile, isSystemFile } from "@/content/files";
 import { resolveNode } from "@/content/filesystem";
 import { monoFont } from "@/themes";
 import { copyText, MenuEntry, useContextMenu } from "../ContextMenu";
@@ -184,7 +184,7 @@ export const EditorApp = () => {
                       },
                     }}
                   >
-                    {half.id === "edit" && isSystemFile(path) && (
+                    {half.id === "edit" && isReadOnlyFile(path) && (
                       <LockOutlinedIcon sx={{ fontSize: 12 }} />
                     )}
                     {half.id === "preview" && (
@@ -266,7 +266,7 @@ export const EditorApp = () => {
             key={active}
             value={contents[active]}
             language={languageOf(basename(active))}
-            readOnly={isSystemFile(active)}
+            readOnly={isReadOnlyFile(active)}
             onChange={(value) => editFile(active, value)}
           />
         ) : (

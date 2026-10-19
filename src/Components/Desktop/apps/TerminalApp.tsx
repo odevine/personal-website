@@ -8,7 +8,10 @@ import {
 } from "react";
 import { Box } from "@mui/material";
 
-import { defaultMotd, isSystemFile } from "@/content/files";
+import { getAchievements, resetAchievements, unlock } from "@/achievements";
+import { AchievementId, achievementsSummary } from "@/content/achievements";
+import { buildDive } from "@/content/dive";
+import { defaultMotd, isGeneratedFile, isSystemFile } from "@/content/files";
 import {
   FsNode,
   addNode,
@@ -28,6 +31,12 @@ import { transitionToScheme } from "@/themeTransition";
 import { AppId, appIds, appMeta } from "../appMeta";
 import { useDesktop } from "../DesktopContext";
 import { useEditor } from "../EditorContext";
+import {
+  PRESENCE_LINE,
+  PRESENCE_SHUDDER,
+  PRESENCE_START,
+} from "../presenceEvents";
+import { DiveLine, TYPE_MS } from "./DiveLine";
 
 interface Entry {
   id: number;
@@ -136,12 +145,32 @@ const removalNotes: Record<string, string> = {
   "system/theme.json": "the site has lost its look",
   "system/dock.json": "the dock is gone",
   "system/fonts": "falling back to the browser's own fonts",
-  "system/animations": "everything stops moving",
+  "system/animations":
+    "everything stops moving and the screen stops repainting properly",
   "system/gravity": "open windows begin to drift",
   "system/hostname": "the host is now localhost",
   "system/motd": "there is no message of the day",
   "pictures/avatar.png": "the about window has no photo",
 };
+
+// Deleting these files unlocks an achievement, folders count for the files inside
+const deletionAchievements: Record<string, AchievementId> = {
+  "system/theme.json": "lost-its-look",
+  "system/gravity": "weightless",
+  "system/animations": "frozen",
+  "system/fonts": "serif-society",
+  "system/hostname": "identity-crisis",
+  "system/motd": "silence",
+  "pictures/avatar.png": "faceless",
+};
+
+// The path of a node and of everything inside it
+const pathsWithin = (node: FsNode, path: string[]): string[] => [
+  path.join("/"),
+  ...(node.children ?? []).flatMap((child) =>
+    pathsWithin(child, [...path, child.name]),
+  ),
+];
 
 const commandNames = [
   "help",
@@ -157,6 +186,7 @@ const commandNames = [
   "projects",
   "contact",
   "theme",
+  "ach",
   "restore",
   "reboot",
   "shutdown",
@@ -205,6 +235,96 @@ export const TerminalApp = () => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [entries]);
 
+  const print = (node: ReactNode) =>
+    setEntries((prev) => [...prev, { id: nextId.current++, node }]);
+
+  // The dive plays out line by line, and ctrl+c cuts it short
+  const diving = useRef<{ timers: ReturnType<typeof setTimeout>[] } | null>(
+    null,
+  );
+  const SURFACE = "https://depthcollector.com/";
+
+  // while the dive plays the prompt is hidden, but the input stays focused to catch ctrl+c
+  const [busy, setBusy] = useState(false);
+
+  const finishDive = () => {
+    diving.current = null;
+    setBusy(false);
+    // whether it ended or was cut off, whatever is down there stays on the line
+    window.dispatchEvent(new Event(PRESENCE_START));
+  };
+
+  const startDive = () => {
+    if (diving.current) return;
+    unlock("dive");
+    const run = { timers: [] as ReturnType<typeof setTimeout>[] };
+    diving.current = run;
+    setBusy(true);
+    let at = 0;
+    for (const step of buildDive()) {
+      at += step.wait;
+      run.timers.push(
+        setTimeout(() => {
+          print(
+            <DiveLine tone={step.tone} text={step.text} type={step.type} />,
+          );
+          if (step.shudder) window.dispatchEvent(new Event(PRESENCE_SHUDDER));
+        }, at),
+      );
+      // a typed line is not finished until the last character is out
+      if (step.type) at += step.text.length * TYPE_MS;
+    }
+    run.timers.push(
+      setTimeout(() => {
+        print(
+          <>
+            <DiveLine text="surface link: " />
+            <Box
+              component="a"
+              href={SURFACE}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ color: "secondary.main" }}
+            >
+              depthcollector.com
+            </Box>
+          </>,
+        );
+        finishDive();
+      }, at + 900),
+    );
+  };
+
+  const cutDive = () => {
+    diving.current?.timers.forEach(clearTimeout);
+    print(<DiveLine tone="threat" text="^C" />);
+    print(<DiveLine tone="corrupt" text="CONNECTION DROPPED" />);
+    print(<DiveLine tone="dim" text="(something is still on the line)" />);
+    finishDive();
+  };
+
+  // closing the terminal mid dive leaves the sequence unfinished, not the presence
+  useEffect(
+    () => () => {
+      if (!diving.current) return;
+      diving.current.timers.forEach(clearTimeout);
+      finishDive();
+    },
+    // finishDive only uses a ref and the window
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  // the presence sends the odd line while this terminal is open
+  useEffect(() => {
+    const onLine = (event: Event) =>
+      print(<DiveLine text={String((event as CustomEvent).detail)} />);
+    window.addEventListener(PRESENCE_LINE, onLine);
+    return () => window.removeEventListener(PRESENCE_LINE, onLine);
+    // print only uses state setters and a ref
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // The text a file currently holds, which may have been edited since it was opened
   const readText = (path: string[]): string | undefined => {
     const node = lookup(path)?.node;
@@ -216,6 +336,7 @@ export const TerminalApp = () => {
   const writeError = (path: string[], elevated: boolean) => {
     const shown = displayPath(path);
     if (path.length < 2) return `${shown}: cannot write here`;
+    if (isGeneratedFile(path.join("/"))) return `${shown}: read-only`;
     if (path[0] === "system") {
       return elevated ? undefined : `${shown}: permission denied, try sudo`;
     }
@@ -256,6 +377,7 @@ export const TerminalApp = () => {
       parent.path,
       newTextFile(name, text, isSystemFile(fullPath.join("/"))),
     );
+    unlock("scribe");
     return undefined;
   };
 
@@ -273,8 +395,10 @@ export const TerminalApp = () => {
         if (!recursive) {
           lines.push(`rm: ${target}: is a folder, use -r`);
         } else if (!elevated) {
+          unlock("nice-try");
           lines.push("rm: it is dangerous to operate recursively on '/'");
         } else {
+          unlock("kernel-panic");
           showScreen("panic");
           lines.push("removing everything...");
         }
@@ -293,12 +417,25 @@ export const TerminalApp = () => {
         lines.push(`rm: ${shown}: permission denied, try sudo`);
       } else if (path[0] === "applications" || path[0] === "projects") {
         lines.push(`rm: ${shown}: read-only`);
+      } else if (isGeneratedFile(path.join("/"))) {
+        lines.push(`rm: ${shown}: read-only`);
       } else if (node.kind === "folder" && !recursive) {
         lines.push(`rm: ${shown}: is a folder, use -r`);
       } else if (path.length === 1 && !(path[0] === "system" && recursive)) {
         lines.push(`rm: ${shown}: refusing to remove a top-level folder`);
       } else {
+        const removed = pathsWithin(node, path);
         removeNode(path);
+        removed.forEach((gone) => {
+          const id = deletionAchievements[gone];
+          if (id) unlock(id);
+        });
+        if (
+          path[0] === "system" &&
+          !resolveNode(["system"])?.children?.length
+        ) {
+          unlock("spring-cleaning");
+        }
         lines.push(`removed ${shown}`);
         const note =
           removalNotes[path.join("/")] ??
@@ -462,6 +599,8 @@ export const TerminalApp = () => {
           "projects         list projects",
           "contact          ways to reach me",
           "theme [name]     list or switch color schemes",
+          "ach              show what you have unlocked",
+          "ach reset --yes  forget everything you have unlocked",
           "sudo <command>   run a command as the system owner",
           "clear            clear the screen",
         ].join("\n");
@@ -574,11 +713,15 @@ export const TerminalApp = () => {
           return `restore: nothing to restore at ${displayPath(typed)}`;
         if (result === "present")
           return `${displayPath(typed)} is already there`;
+        unlock("undo");
         return `restored ${displayPath(typed)}`;
       }
       case "reboot":
       case "shutdown": {
         if (!elevated) return `${command}: permission denied, try sudo`;
+        unlock(
+          command === "reboot" ? "turn-it-off-and-on" : "safe-to-turn-off",
+        );
         showScreen(command === "reboot" ? "boot" : "off");
         return command === "reboot" ? "rebooting..." : "shutting down...";
       }
@@ -622,6 +765,13 @@ export const TerminalApp = () => {
         return (resolveNode(["projects"])?.children ?? [])
           .map((p) => `${p.name}\n  ${p.repo?.description ?? "no description"}`)
           .join("\n\n");
+      case "dive":
+        startDive();
+        return diving.current ? (
+          <DiveLine text="dialing depthcollector.com ..." />
+        ) : (
+          <DiveLine text="already connected. try ctrl+c" />
+        );
       case "contact":
         return (
           <>
@@ -662,9 +812,21 @@ export const TerminalApp = () => {
         );
         return `switched to ${match.label}`;
       }
+      case "ach": {
+        if (args[0]?.toLowerCase() !== "reset") {
+          return achievementsSummary(getAchievements().unlocked);
+        }
+        // forgetting everything cannot be undone, so it needs a second word
+        if (args[1] !== "--yes") {
+          return "this forgets everything you have unlocked. run it again as: ach reset --yes";
+        }
+        resetAchievements();
+        return "achievements reset";
+      }
       case "clear":
         return null;
       default:
+        unlock("typo");
         return `command not found: ${head.text}. try help`;
     }
   };
@@ -694,7 +856,11 @@ export const TerminalApp = () => {
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Tab") {
+    if (busy) {
+      // nothing can be typed until the dive ends, only ctrl+c gets through
+      event.preventDefault();
+      if (event.ctrlKey && event.key.toLowerCase() === "c") cutDive();
+    } else if (event.key === "Tab") {
       event.preventDefault();
       complete();
     } else if (event.key === "Enter") {
@@ -732,7 +898,19 @@ export const TerminalApp = () => {
           {entry.node}
         </Box>
       ))}
-      <Box sx={{ display: "flex", gap: 1 }}>
+      <Box
+        sx={
+          busy
+            ? {
+                position: "absolute",
+                width: 1,
+                height: 1,
+                overflow: "hidden",
+                clipPath: "inset(50%)",
+              }
+            : { display: "flex", gap: 1 }
+        }
+      >
         <Prompt cwd={cwd} host={host} />
         <Box
           component="input"
@@ -743,7 +921,7 @@ export const TerminalApp = () => {
           autoComplete="off"
           aria-label="terminal input"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => !busy && setInput(e.target.value)}
           onKeyDown={onKeyDown}
           sx={{
             flexGrow: 1,

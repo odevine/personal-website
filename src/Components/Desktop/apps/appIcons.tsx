@@ -1,5 +1,6 @@
 import { ReactElement } from "react";
 import CodeIcon from "@mui/icons-material/Code";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import FolderIcon from "@mui/icons-material/Folder";
 import ImageIcon from "@mui/icons-material/Image";
 import PersonIcon from "@mui/icons-material/Person";
@@ -16,4 +17,5 @@ export const appIcons: Record<AppId, ReactElement> = {
   terminal: <TerminalIcon />,
   explorer: <FolderIcon />,
   settings: <TuneIcon />,
+  achievements: <EmojiEventsIcon />,
 };

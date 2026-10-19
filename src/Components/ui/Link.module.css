@@ -1,0 +1,13 @@
+.link {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}

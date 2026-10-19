@@ -6,7 +6,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { Box } from "@mui/material";
 
 import { getAchievements, resetAchievements, unlock } from "@/achievements";
 import { AchievementId, achievementsSummary } from "@/content/achievements";
@@ -26,8 +25,9 @@ import {
 import { useFilesystemVersion } from "@/content/useFilesystem";
 import { formatDate, formatSize } from "@/format";
 import { useTheme } from "@/ThemeContext";
-import { colorSchemes, monoFont } from "@/themes";
+import { colorSchemes } from "@/themes";
 import { transitionToScheme } from "@/themeTransition";
+import styles from "./TerminalApp.module.css";
 import { AppId, appIds, appMeta } from "../appMeta";
 import { useDesktop } from "../DesktopContext";
 import { useEditor } from "../EditorContext";
@@ -110,24 +110,20 @@ const permission = (path: string[]) =>
     ? "r-"
     : "rw";
 
+const nodeColors: Record<FsNode["icon"], string> = {
+  folder: "var(--syntax-string)",
+  project: "var(--syntax-string)",
+  markdown: "var(--syntax-operator)",
+  image: "var(--syntax-number)",
+  json: "var(--syntax-fn)",
+  app: "var(--primary)",
+};
+
 const NodeName = ({ node }: { node: FsNode }) => (
-  <Box
-    component="span"
-    sx={{
-      color: (theme) =>
-        ({
-          folder: theme.palette.syntax.string,
-          project: theme.palette.syntax.string,
-          markdown: theme.palette.syntax.operator,
-          image: theme.palette.syntax.number,
-          json: theme.palette.syntax.fn,
-          app: theme.palette.primary.main,
-        })[node.icon],
-    }}
-  >
+  <span style={{ color: nodeColors[node.icon] }}>
     {node.name}
     {node.kind === "folder" ? "/" : ""}
-  </Box>
+  </span>
 );
 
 // Folders first, then by name, the same order the explorer starts with
@@ -279,15 +275,14 @@ export const TerminalApp = () => {
         print(
           <>
             <DiveLine text="surface link: " />
-            <Box
-              component="a"
+            <a
               href={SURFACE}
               target="_blank"
               rel="noopener noreferrer"
-              sx={{ color: "secondary.main" }}
+              className={styles.link}
             >
               depthcollector.com
-            </Box>
+            </a>
           </>,
         );
         finishDive();
@@ -542,9 +537,9 @@ export const TerminalApp = () => {
       {
         id: nextId.current++,
         node: (
-          <Box sx={{ color: "text.primary" }}>
+          <div className={styles.echo}>
             <Prompt cwd={cwd} host={host} /> {input}
-          </Box>
+          </div>
         ),
       },
       {
@@ -640,13 +635,13 @@ export const TerminalApp = () => {
         return (
           <>
             {nodes.map((node) => (
-              <Box key={node.name} sx={{ whiteSpace: "pre" }}>
+              <div key={node.name} className={styles.pre}>
                 {node.kind === "folder" ? "d" : "-"}
                 {permission([...target.path, node.name])}{" "}
                 {(formatSize(node.bytes) || "-").padStart(8)}{" "}
                 {(formatDate(node.modified) || "-").padStart(13)}{" "}
                 <NodeName node={node} />
-              </Box>
+              </div>
             ))}
           </>
         );
@@ -776,18 +771,17 @@ export const TerminalApp = () => {
         return (
           <>
             {contact.map(([label, href, text]) => (
-              <Box key={label}>
+              <div key={label}>
                 {label.padEnd(10)}
-                <Box
-                  component="a"
+                <a
                   href={href}
                   target={href.startsWith("http") ? "_blank" : undefined}
                   rel="noopener noreferrer"
-                  sx={{ color: "secondary.main" }}
+                  className={styles.link}
                 >
                   {text}
-                </Box>
-              </Box>
+                </a>
+              </div>
             ))}
           </>
         );
@@ -837,9 +831,9 @@ export const TerminalApp = () => {
     const echoed: Entry = {
       id: nextId.current++,
       node: (
-        <Box sx={{ color: "text.primary" }}>
+        <div className={styles.echo}>
           <Prompt cwd={cwd} host={host} /> {raw}
-        </Box>
+        </div>
       ),
     };
 
@@ -876,44 +870,21 @@ export const TerminalApp = () => {
   };
 
   return (
-    <Box
+    <div
       onClick={() =>
         !window.getSelection()?.toString() && inputRef.current?.focus()
       }
-      sx={{
-        minHeight: "100%",
-        p: 2,
-        fontFamily: monoFont,
-        fontSize: "0.8125rem",
-        lineHeight: 1.7,
-        cursor: "text",
-        "& a": { textUnderlineOffset: 3 },
-      }}
+      className={styles.terminal}
     >
       {entries.map((entry) => (
-        <Box
-          key={entry.id}
-          sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
-        >
+        <div key={entry.id} className={styles.entry}>
           {entry.node}
-        </Box>
+        </div>
       ))}
-      <Box
-        sx={
-          busy
-            ? {
-                position: "absolute",
-                width: 1,
-                height: 1,
-                overflow: "hidden",
-                clipPath: "inset(50%)",
-              }
-            : { display: "flex", gap: 1 }
-        }
-      >
+      {/* while the dive plays the prompt is hidden, but the input stays focused */}
+      <div className={busy ? "sr-only" : styles.promptLine}>
         <Prompt cwd={cwd} host={host} />
-        <Box
-          component="input"
+        <input
           ref={inputRef}
           autoFocus
           spellCheck={false}
@@ -923,37 +894,19 @@ export const TerminalApp = () => {
           value={input}
           onChange={(e) => !busy && setInput(e.target.value)}
           onKeyDown={onKeyDown}
-          sx={{
-            flexGrow: 1,
-            minWidth: 0,
-            p: 0,
-            border: 0,
-            outline: 0,
-            font: "inherit",
-            color: "text.primary",
-            background: "transparent",
-            caretColor: (theme) => theme.palette.secondary.main,
-          }}
+          className={styles.input}
         />
-      </Box>
+      </div>
       <div ref={bottomRef} />
-    </Box>
+    </div>
   );
 };
 
 const Prompt = ({ cwd, host }: { cwd: string[]; host: string }) => (
-  <Box component="span" sx={{ whiteSpace: "nowrap" }}>
-    <Box component="span" sx={{ color: (t) => t.palette.syntax.fn }}>
-      owen
-    </Box>
-    <Box component="span" sx={{ color: (t) => t.palette.syntax.operator }}>
-      @
-    </Box>
-    <Box component="span" sx={{ color: (t) => t.palette.syntax.number }}>
-      {host}
-    </Box>
-    <Box component="span" sx={{ color: "text.secondary" }}>
-      {` ${displayPath(cwd)} $`}
-    </Box>
-  </Box>
+  <span className={styles.prompt}>
+    <span style={{ color: "var(--syntax-fn)" }}>owen</span>
+    <span style={{ color: "var(--syntax-operator)" }}>@</span>
+    <span style={{ color: "var(--syntax-number)" }}>{host}</span>
+    <span className="t-secondary">{` ${displayPath(cwd)} $`}</span>
+  </span>
 );

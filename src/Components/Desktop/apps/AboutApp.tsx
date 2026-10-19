@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { Box, Button, Stack, Typography } from "@mui/material";
 
+import { Button } from "@/Components/ui/Button";
 import { nodeExists } from "@/content/filesystem";
 import { useFilesystemVersion } from "@/content/useFilesystem";
 import { useTheme } from "@/ThemeContext";
@@ -8,6 +8,7 @@ import { getScheme, monochromeScheme } from "@/themes";
 import { useEditor } from "../EditorContext";
 import { ABOUT_PATH } from "../liveFiles";
 import { Block, parseBlocks, renderInline } from "./markdown";
+import styles from "./AboutApp.module.css";
 
 const links = [
   { label: "email", href: "mailto:owen@devine.dev" },
@@ -46,48 +47,36 @@ const Title = ({ text }: { text: string }) => {
   const palette = (themeMissing ? monochromeScheme : getScheme(scheme)).palette;
 
   return (
-    <Typography variant="h5">
-      <Box component="span" sx={{ color: palette[firstKey] }}>
-        {first}
-      </Box>
+    <h5 className="t-h5">
+      <span style={{ color: palette[firstKey] }}>{first}</span>
       {rest.length > 0 && (
-        <Box component="span" sx={{ color: palette[restKey] }}>
-          {" "}
-          {rest.join(" ")}
-        </Box>
+        <span style={{ color: palette[restKey] }}> {rest.join(" ")}</span>
       )}
-    </Typography>
+    </h5>
   );
 };
 
 const BlockView = ({ block }: { block: Block }) => {
   if (block.kind === "heading") {
-    return (
-      <Typography variant={block.level === 1 ? "h5" : "subtitle1"}>
-        {renderInline(block.text)}
-      </Typography>
+    return block.level === 1 ? (
+      <h5 className="t-h5">{renderInline(block.text)}</h5>
+    ) : (
+      <h6 className="t-subtitle1">{renderInline(block.text)}</h6>
     );
   }
   if (block.kind === "list") {
     return (
-      <Box
-        component="ul"
-        sx={{ m: 0, pl: 2.5, color: "text.secondary", fontSize: "0.875rem" }}
-      >
+      <ul className={styles.list}>
         {block.items.map((item, i) => (
           <li key={i}>{renderInline(item)}</li>
         ))}
-      </Box>
+      </ul>
     );
   }
   return (
-    <Typography
-      variant="body2"
-      color="text.secondary"
-      sx={{ whiteSpace: "pre-line" }}
-    >
+    <p className={`t-body2 t-secondary ${styles.paragraph}`}>
       {renderInline(block.text)}
-    </Typography>
+    </p>
   );
 };
 
@@ -110,61 +99,36 @@ export const AboutApp = () => {
   const body = subtitle ? afterTitle.slice(1) : afterTitle;
 
   return (
-    <Stack spacing={2} sx={{ p: 2.5 }}>
-      <Stack direction="row" alignItems="center" spacing={2.5}>
+    <div className={styles.about}>
+      <div className={styles.header}>
         {hasAvatar ? (
-          <Box
-            component="img"
+          <img
             alt="picture of me"
             src="/images/avatar.png"
-            sx={{
-              width: 80,
-              height: 80,
-              flexShrink: 0,
-              objectFit: "cover",
-              borderRadius: "50%",
-              border: (theme) => `2px solid ${theme.palette.primary.main}`,
-            }}
+            className={styles.avatar}
           />
         ) : (
-          <Box
-            aria-label="missing photo"
-            sx={{
-              width: 80,
-              height: 80,
-              flexShrink: 0,
-              display: "grid",
-              placeItems: "center",
-              fontSize: 40,
-              borderRadius: "50%",
-              border: (theme) => `2px dashed ${theme.palette.divider}`,
-            }}
-          >
+          <div aria-label="missing photo" className={styles.missingAvatar}>
             👻
-          </Box>
+          </div>
         )}
-        <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+        <div className={styles.heading}>
           {!hasAbout && (
-            <Typography variant="body2" color="text.secondary">
-              about.md: no such file
-            </Typography>
+            <p className="t-body2 t-secondary">about.md: no such file</p>
           )}
           {title && <Title text={title.text} />}
           {subtitle && (
-            <Typography variant="body2" color="text.secondary">
-              {renderInline(subtitle.text)}
-            </Typography>
+            <p className="t-body2 t-secondary">{renderInline(subtitle.text)}</p>
           )}
-        </Stack>
-      </Stack>
+        </div>
+      </div>
       {body.map((block, i) => (
         <BlockView key={i} block={block} />
       ))}
-      <Stack direction="row" useFlexGap flexWrap="wrap" gap={1}>
+      <div className={styles.links}>
         {links.map(({ label, href }) => (
           <Button
             key={label}
-            size="small"
             variant="outlined"
             href={href}
             target={href.startsWith("http") ? "_blank" : undefined}
@@ -173,7 +137,7 @@ export const AboutApp = () => {
             {label}
           </Button>
         ))}
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   );
 };

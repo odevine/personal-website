@@ -1,8 +1,11 @@
 import { PointerEvent, ReactNode, useRef, useState } from "react";
-import { alpha, Box, IconButton, Stack, Tooltip } from "@mui/material";
+
+import { cx } from "@/Components/ui/cx";
+import { Tooltip } from "@/Components/ui/Tooltip";
 
 import { AppId, appMeta } from "./appMeta";
 import { MenuEntry, useContextMenu } from "./ContextMenu";
+import styles from "./Dock.module.css";
 
 interface Props {
   apps: AppId[];
@@ -44,7 +47,7 @@ export const Dock = ({
     order: AppId[];
     offset: number;
   } | null>(null);
-  const session = useRef<Session>();
+  const session = useRef<Session | undefined>(undefined);
   const suppressClick = useRef(false);
   const container = useRef<HTMLDivElement>(null);
 
@@ -104,46 +107,19 @@ export const Dock = ({
   };
 
   return (
-    <Box
-      component="nav"
-      aria-label="applications"
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        pb: 1,
-        pt: 0.5,
-        // sits above windows that are dragged over it, without blocking clicks on the gaps
-        position: "relative",
-        zIndex: 1,
-        pointerEvents: "none",
-      }}
-    >
-      <Stack
-        ref={container}
-        direction="row"
-        spacing={0.5}
-        sx={{
-          pointerEvents: "auto",
-          px: 0.75,
-          py: 0.5,
-          borderRadius: (theme) => `${theme.shape.borderRadius * 1.5}px`,
-          border: (theme) =>
-            `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-          backgroundColor: "background.paper",
-          boxShadow: (theme) =>
-            `0 8px 30px -12px ${alpha(theme.palette.primary.main, 0.4)}`,
-        }}
-      >
+    // sits above windows that are dragged over it, without blocking clicks on the gaps
+    <nav aria-label="applications" className={styles.dock}>
+      <div ref={container} className={styles.tray}>
         {shown.map((appId) => {
           const dragging = drag?.appId === appId;
           return (
             <Tooltip
               key={appId}
               title={appMeta[appId].title}
-              placement="top"
-              disableHoverListener={Boolean(drag)}
+              disabled={Boolean(drag)}
             >
-              <IconButton
+              <button
+                type="button"
                 data-dock-app={appId}
                 onContextMenu={(event) => {
                   event.preventDefault();
@@ -155,7 +131,7 @@ export const Dock = ({
                 onPointerUp={() => finish(true)}
                 onPointerCancel={() => finish(false)}
                 aria-label={`open ${appMeta[appId].title}`}
-                color={activeApp === appId ? "primary" : "default"}
+                className={cx(styles.app, activeApp === appId && styles.active)}
                 // inline so it wins over the hover lift while an icon is held
                 style={
                   dragging
@@ -167,39 +143,14 @@ export const Dock = ({
                       }
                     : undefined
                 }
-                sx={{
-                  position: "relative",
-                  p: 0.75,
-                  touchAction: "none",
-                  borderRadius: (theme) => `${theme.shape.borderRadius}px`,
-                  "& svg": { fontSize: 20 },
-                  transition: "transform 120ms ease",
-                  "&:hover": { transform: "translateY(-3px)" },
-                  "@media (prefers-reduced-motion: reduce)": {
-                    transition: "none",
-                    "&:hover": { transform: "none" },
-                  },
-                }}
               >
                 {icons[appId]}
-                {openApps.has(appId) && (
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      bottom: 2,
-                      width: 4,
-                      height: 4,
-                      borderRadius: "50%",
-                      backgroundColor:
-                        activeApp === appId ? "primary.main" : "text.secondary",
-                    }}
-                  />
-                )}
-              </IconButton>
+                {openApps.has(appId) && <span className={styles.dot} />}
+              </button>
             </Tooltip>
           );
         })}
-      </Stack>
-    </Box>
+      </div>
+    </nav>
   );
 };

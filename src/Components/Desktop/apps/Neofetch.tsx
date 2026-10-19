@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { CSSProperties } from "react";
 
 import { asciiAvatar } from "@/content/asciiAvatar";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/content/filesystem";
 import { getScheme } from "@/themes";
 import pkg from "../../../../package.json";
+import styles from "./Neofetch.module.css";
 
 const startedAt = Date.now();
 
@@ -19,8 +20,6 @@ const countFiles = (node: FsNode): number =>
     ? (node.children ?? []).reduce((sum, child) => sum + countFiles(child), 0)
     : 1;
 
-// Width at which the art and the text fit on one line
-const SIDE_BY_SIDE_PX = 700;
 const ART_ROW_HEIGHT = 1.15;
 const TEXT_ROW_HEIGHT = 1.7;
 
@@ -50,7 +49,7 @@ export const Neofetch = ({
     ["Host", host],
     ["Kernel", `react ${version(pkg.dependencies.react)}`],
     ["Bundler", `vite ${version(pkg.devDependencies.vite)}`],
-    ["UI", `mui ${version(pkg.dependencies["@mui/material"])}`],
+    ["UI", "css modules, radix primitives"],
     ["Uptime", `${minutes} ${minutes === 1 ? "min" : "mins"}`],
     ["Shell", "owen-sh"],
     ["Resolution", `${window.innerWidth}x${window.innerHeight}`],
@@ -77,69 +76,35 @@ export const Neofetch = ({
   const artScale = +(textHeight / (artRows * ART_ROW_HEIGHT)).toFixed(3);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "flex-start",
-        columnGap: 3,
-        rowGap: 1,
-        py: 0.5,
-        whiteSpace: "pre",
-        containerType: "inline-size",
-      }}
-    >
-      <Box
-        component="pre"
+    <div className={styles.neofetch}>
+      <pre
         aria-hidden
-        sx={{
-          m: 0,
-          fontFamily: "inherit",
-          fontSize: 12,
-          lineHeight: 1.15,
-          color: "primary.main",
-          // side by side with the text, the art grows to the text's height with its shape kept
-          [`@container (min-width: ${SIDE_BY_SIDE_PX}px)`]: {
-            fontSize: `${artScale}em`,
-          },
-        }}
+        className={styles.art}
+        style={{ "--art-scale": `${artScale}em` } as CSSProperties}
       >
         {asciiAvatar}
-      </Box>
-      <Box>
-        <Box>
-          <Box component="span" sx={{ color: (t) => t.palette.syntax.fn }}>
-            owen
-          </Box>
-          <Box
-            component="span"
-            sx={{ color: (t) => t.palette.syntax.operator }}
-          >
-            @
-          </Box>
-          <Box component="span" sx={{ color: (t) => t.palette.syntax.number }}>
-            {host}
-          </Box>
-        </Box>
-        <Box sx={{ color: "text.secondary" }}>
-          {"-".repeat(5 + host.length)}
-        </Box>
+      </pre>
+      <div>
+        <div>
+          <span style={{ color: "var(--syntax-fn)" }}>owen</span>
+          <span style={{ color: "var(--syntax-operator)" }}>@</span>
+          <span style={{ color: "var(--syntax-number)" }}>{host}</span>
+        </div>
+        <div className="t-secondary">{"-".repeat(5 + host.length)}</div>
         {rows.map(([label, value]) => (
-          <Box key={label}>
-            <Box component="span" sx={{ color: "primary.main" }}>
-              {label.padEnd(11)}
-            </Box>
+          <div key={label}>
+            <span className={styles.label}>{label.padEnd(11)}</span>
             {value}
-          </Box>
+          </div>
         ))}
-        <Box sx={{ mt: 1 }}>
+        <div className={styles.swatches}>
           {swatchKeys.map((key) => (
-            <Box key={key} component="span" sx={{ color: palette[key] }}>
+            <span key={key} style={{ color: palette[key] }}>
               {"███"}
-            </Box>
+            </span>
           ))}
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };

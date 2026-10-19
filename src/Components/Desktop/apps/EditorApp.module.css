@@ -1,0 +1,145 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tabs {
+  display: flex;
+  flex-shrink: 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--divider);
+  background-color: var(--bg);
+}
+
+.tabs::-webkit-scrollbar {
+  height: 0;
+}
+
+.tab {
+  display: flex;
+  flex-shrink: 0;
+  height: 34px;
+  border-right: 1px solid var(--divider);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.selected {
+  background-color: var(--paper);
+}
+
+.half {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  border-top: 2px solid transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.half + .half {
+  border-left: 1px solid var(--divider);
+}
+
+.single {
+  padding-right: 0;
+}
+
+/* the half that is not showing sits back from its tab */
+.selected .half:not(.on) {
+  background-color: var(--bg);
+}
+
+.half:hover,
+.on {
+  color: var(--text);
+}
+
+.on {
+  border-top-color: var(--primary);
+}
+
+.half:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.closeSlot {
+  position: relative;
+  align-self: center;
+  width: 20px;
+  height: 20px;
+  margin: 0 4px;
+}
+
+.dirty {
+  position: absolute;
+  inset: 0;
+  width: 6px;
+  height: 6px;
+  margin: auto;
+  border-radius: 50%;
+  background-color: var(--text-2);
+}
+
+.tab:hover .dirty {
+  display: none;
+}
+
+.close {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+.shown,
+.tab:hover .close,
+.close:focus-visible {
+  opacity: 1;
+}
+
+.newFile {
+  align-self: center;
+  margin: 0 4px;
+  border-radius: var(--radius);
+}
+
+.content {
+  flex-grow: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.loading {
+  display: block;
+  padding: 20px;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-2);
+}
+
+.status {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-top: 1px solid var(--divider);
+}
+
+.ok {
+  color: var(--text-2);
+}
+
+.warn {
+  color: var(--syntax-string);
+}
+
+.error {
+  color: var(--syntax-keyword);
+}

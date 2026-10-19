@@ -1,0 +1,46 @@
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 16px;
+  touch-action: none;
+  user-select: none;
+  cursor: pointer;
+}
+
+.track {
+  position: relative;
+  flex-grow: 1;
+  height: 4px;
+  border-radius: 12px;
+  background-color: color-mix(in srgb, var(--primary) 38%, transparent);
+}
+
+.range {
+  position: absolute;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--primary);
+}
+
+.thumb {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  box-shadow:
+    0 3px 1px -2px rgba(0, 0, 0, 0.2),
+    0 2px 2px 0 rgba(0, 0, 0, 0.14);
+  transition: box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.thumb:hover,
+.thumb:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.thumb:active {
+  box-shadow: 0 0 0 10px color-mix(in srgb, var(--primary) 16%, transparent);
+}

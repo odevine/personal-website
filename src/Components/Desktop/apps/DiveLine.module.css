@@ -1,0 +1,47 @@
+.line {
+  position: relative;
+  display: inline-block;
+}
+
+/* the corrupt lines tear apart with a cyan copy on top */
+.corrupt::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #4dffff;
+  text-shadow: none;
+}
+
+.tearing::after {
+  animation: dive-tear 1.4s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tearing::after {
+    animation: none;
+  }
+}
+
+@keyframes dive-tear {
+  0%,
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+
+  20% {
+    clip-path: inset(10% 0 55% 0);
+    transform: translateX(-4px);
+  }
+
+  45% {
+    clip-path: inset(60% 0 5% 0);
+    transform: translateX(4px);
+  }
+
+  70% {
+    clip-path: inset(30% 0 40% 0);
+    transform: translateX(-2px);
+  }
+}

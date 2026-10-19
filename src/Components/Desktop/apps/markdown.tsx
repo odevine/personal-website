@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
-import { Link } from "@mui/material";
+
+import { Link } from "@/Components/ui/Link";
 
 export type Block =
   | { kind: "heading"; level: number; text: string }
@@ -64,13 +65,7 @@ export const renderInline = (text: string): ReactNode[] =>
     const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part);
     if (link && safeUrl.test(link[2])) {
       return (
-        <Link
-          key={i}
-          href={link[2]}
-          target="_blank"
-          rel="noopener noreferrer"
-          underline="hover"
-        >
+        <Link key={i} href={link[2]} target="_blank" rel="noopener noreferrer">
           {link[1]}
         </Link>
       );

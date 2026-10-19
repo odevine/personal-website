@@ -1,3 +1,3 @@
 import { Desktop } from "@/Components";
 
-export const App = (): JSX.Element => <Desktop />;
+export const App = (): React.JSX.Element => <Desktop />;

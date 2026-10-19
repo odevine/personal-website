@@ -17,6 +17,9 @@ export const ThemeFileSync = () => {
   const text = contents[THEME_FILE_PATH];
   const latestText = useRef(text);
   latestText.current = text;
+  // texts this sync wrote that have not come back yet. Reading them back into the
+  // settings races quick slider changes and flips between two values forever
+  const pending = useRef<string[]>([]);
 
   // settings to file
   useEffect(() => {
@@ -25,11 +28,13 @@ export const ThemeFileSync = () => {
     const canonical = themeFileText(scheme, settings);
     const current = latestText.current;
     if (current === undefined) {
+      pending.current.push(canonical);
       registerFile(THEME_FILE_PATH, canonical);
       return;
     }
     const parsed = parseThemeFile(current);
     if (parsed.ok && matchesCurrent(parsed.values, scheme, settings)) return;
+    pending.current.push(canonical);
     replaceFile(THEME_FILE_PATH, canonical);
   }, [scheme, settings, themeMissing, registerFile, replaceFile]);
 
@@ -46,7 +51,10 @@ export const ThemeFileSync = () => {
     }
 
     const { values, warnings } = parsed;
-    if (!matchesCurrent(values, scheme, settings)) {
+    // writes arrive in order, so this one and any older ones are done
+    const own = pending.current.indexOf(text);
+    if (own !== -1) pending.current.splice(0, own + 1);
+    if (own === -1 && !matchesCurrent(values, scheme, settings)) {
       if (values.scheme !== undefined) setScheme(values.scheme);
       updateSettings(values.settings);
     }

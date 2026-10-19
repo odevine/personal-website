@@ -1,0 +1,75 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 4px 5px;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--primary);
+  background-color: transparent;
+  font-family: var(--font-mono);
+  font-size: calc(0.8125rem * var(--fs));
+  font-weight: 500;
+  line-height: 1.75;
+  letter-spacing: 0.02857em;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button:hover {
+  background-color: color-mix(in srgb, var(--primary) 4%, transparent);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.button:disabled {
+  color: var(--icon-disabled);
+  cursor: default;
+}
+
+.outlined {
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--primary) 50%, transparent);
+}
+
+.outlined:hover {
+  border-color: var(--primary);
+}
+
+.icon {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border: 0;
+  border-radius: 50%;
+  color: var(--icon);
+  background-color: transparent;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.icon:hover {
+  background-color: var(--hover);
+}
+
+.icon:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.icon:disabled {
+  color: var(--icon-disabled);
+  background-color: transparent;
+  cursor: default;
+}

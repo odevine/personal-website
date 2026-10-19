@@ -5,24 +5,12 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { alpha, Box } from "@mui/material";
 
-import { monoFont } from "@/themes";
 import { Language, highlight } from "./highlight";
+import styles from "./CodeEditor.module.css";
 
+// matches tab-size in the stylesheet
 const INDENT = "  ";
-
-// The highlighted layer and the textarea must share these exactly
-const textStyle = {
-  fontFamily: monoFont,
-  fontSize: 13,
-  lineHeight: "22px",
-  letterSpacing: 0,
-  tabSize: INDENT.length,
-  whiteSpace: "pre",
-} as const;
-
-const padding = "12px 16px 12px 0";
 
 interface Props {
   value: string;
@@ -75,57 +63,29 @@ export const CodeEditor = ({
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        width: "max-content",
-        minWidth: "100%",
-        minHeight: "100%",
-      }}
-    >
-      <Box
+    <div className={styles.editor}>
+      <div
         aria-hidden
-        sx={{
-          ...textStyle,
-          position: "sticky",
-          left: 0,
-          zIndex: 1,
-          flexShrink: 0,
-          minWidth: 36,
-          py: "12px",
-          pr: 1.25,
-          textAlign: "right",
-          userSelect: "none",
-          color: "text.disabled",
-          backgroundColor: "background.paper",
-        }}
+        data-fade-inset="left"
+        className={`${styles.text} ${styles.gutter}`}
       >
         {lines.map((_, i) => (
           <div key={i}>{i + 1}</div>
         ))}
-      </Box>
-      <Box sx={{ position: "relative", flexGrow: 1 }}>
-        <Box
-          component="pre"
-          aria-hidden
-          sx={{ ...textStyle, m: 0, p: padding, pointerEvents: "none" }}
-        >
+      </div>
+      <div className={styles.page}>
+        <pre aria-hidden className={`${styles.text} ${styles.layer}`}>
           {lines.map((tokens, i) => (
-            <div key={i} style={{ minHeight: textStyle.lineHeight }}>
+            <div key={i} className={styles.row}>
               {tokens.map(([text, token], j) => (
-                <Box
-                  key={j}
-                  component="span"
-                  sx={{ color: (theme) => theme.palette.syntax[token] }}
-                >
+                <span key={j} style={{ color: `var(--syntax-${token})` }}>
                   {text}
-                </Box>
+                </span>
               ))}
             </div>
           ))}
-        </Box>
-        <Box
-          component="textarea"
+        </pre>
+        <textarea
           ref={textarea}
           value={value}
           aria-label="editor"
@@ -138,28 +98,9 @@ export const CodeEditor = ({
             onChange(event.target.value)
           }
           onKeyDown={onKeyDown}
-          sx={{
-            ...textStyle,
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            m: 0,
-            p: padding,
-            border: 0,
-            outline: 0,
-            resize: "none",
-            overflow: "hidden",
-            color: "transparent",
-            caretColor: (theme) => theme.palette.text.primary,
-            background: "transparent",
-            "&::selection": {
-              backgroundColor: (theme) =>
-                alpha(theme.palette.primary.main, 0.35),
-            },
-          }}
+          className={`${styles.text} ${styles.input}`}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };

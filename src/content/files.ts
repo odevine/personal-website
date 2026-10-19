@@ -41,7 +41,8 @@ export const seedFiles: SeedFile[] = [
 software developer in maine
 
 i build web and mobile interfaces for a living.
-most of my free time goes into side projects that are probably related to magic the gathering in some way.
+
+most of my free time goes into side projects that are probably related to magic the gathering.
 `,
   },
   {
@@ -49,7 +50,7 @@ most of my free time goes into side projects that are probably related to magic 
     content: `/* styles written here apply to the whole site as you type */
 
 /* try uncommenting this */
-/* .MuiButton-root { letter-spacing: 0.08em; } */
+/* .Button_button { letter-spacing: 0.08em; } */
 `,
   },
   {

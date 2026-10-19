@@ -6,16 +6,15 @@ import {
   useRef,
   useState,
 } from "react";
-import { alpha, Box, Stack, Theme, Typography } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import FilterNoneIcon from "@mui/icons-material/FilterNone";
-import RemoveIcon from "@mui/icons-material/Remove";
 
+import { cx } from "@/Components/ui/cx";
+import { CloseIcon, MaximizeIcon, MinimizeIcon } from "@/Components/ui/icons";
 import { unlock } from "@/achievements";
 import { reducedMotion } from "@/motion";
 import { useContextMenu } from "./ContextMenu";
+import { useScrollFade } from "@/hooks/useScrollFade";
 import { useTheme } from "@/ThemeContext";
-import { SyntaxToken, monoFont } from "@/themes";
+import { SyntaxToken } from "@/themes";
 import {
   Area,
   DesktopAction,
@@ -23,6 +22,7 @@ import {
   MIN_W,
   WindowState,
 } from "./windowReducer";
+import styles from "./Window.module.css";
 
 interface Props extends PropsWithChildren {
   win: WindowState;
@@ -41,10 +41,6 @@ interface Props extends PropsWithChildren {
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), Math.max(min, max));
-
-// Distance of the resize grip from the corner, so it clears the rounded edge
-const gripInset = (theme: Theme) =>
-  Math.max(4, theme.shape.borderRadius * 0.6 + 3);
 
 // Distance a window must move or resize before it leaves another copy, and how many are kept
 const SMEAR_STEP = 18;
@@ -106,17 +102,23 @@ export const Window = ({
   const { settings } = useTheme();
   const { show } = useContextMenu();
   const glass = settings.windowOpacity < 1;
-  const drag = useRef<{
-    sx: number;
-    sy: number;
-    ox: number;
-    oy: number;
-    fromMaximized: boolean;
-  }>();
+  const drag = useRef<
+    | {
+        sx: number;
+        sy: number;
+        ox: number;
+        oy: number;
+        fromMaximized: boolean;
+      }
+    | undefined
+  >(undefined);
   const rootRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useScrollFade<HTMLDivElement>();
   const samples = useRef<Array<{ t: number; x: number; y: number }>>([]);
-  const glide = useRef<number>();
-  const size = useRef<{ sx: number; sy: number; ow: number; oh: number }>();
+  const glide = useRef<number | undefined>(undefined);
+  const size = useRef<
+    { sx: number; sy: number; ow: number; oh: number } | undefined
+  >(undefined);
   const fullscreen = mobile || win.maximized;
   const latest = useRef({ win, area, zero: zeroGravity, fullscreen });
   latest.current = { win, area, zero: zeroGravity, fullscreen };
@@ -409,32 +411,16 @@ export const Window = ({
 
     if (mobile && label === "maximize") return null;
     return (
-      <Box
+      <button
         key={label}
-        component="button"
         type="button"
         aria-label={label}
         onClick={act}
-        sx={{
-          display: "grid",
-          placeItems: "center",
-          width: 13,
-          height: 13,
-          p: 0,
-          border: 0,
-          borderRadius: "50%",
-          cursor: "pointer",
-          color: (theme) => alpha(theme.palette.common.black, 0.65),
-          backgroundColor: (theme) => theme.palette.syntax[token],
-          opacity: active ? 1 : 0.5,
-          "&:focus-visible": {
-            outline: "2px solid",
-            outlineColor: "text.primary",
-          },
-        }}
+        className={styles.light}
+        style={{ backgroundColor: `var(--syntax-${token})` }}
       >
         <svg
-          className="control-icon"
+          className={styles.lightIcon}
           width="9"
           height="9"
           viewBox="0 0 12 12"
@@ -452,25 +438,27 @@ export const Window = ({
             }
           />
         </svg>
-      </Box>
+      </button>
     );
   };
 
   return (
-    <Box
+    <div
       ref={rootRef}
       data-window={appId}
       aria-hidden={hidden || undefined}
       onPointerDown={focus}
       onPointerUp={() => resumeDrift()}
       onPointerCancel={() => resumeDrift()}
-      sx={{
-        position: "absolute",
-        top: 0,
-        left: 0,
+      className={cx(
+        styles.window,
+        active && styles.active,
+        fullscreen && styles.fullscreen,
+        glass && styles.glass,
+      )}
+      style={{
         width: frame.w,
         height: frame.h,
-        transformOrigin: "0 0",
         transform: win.minimized
           ? (minimizedTransform() ?? `translate(${frame.x}px, ${frame.y}px)`)
           : `translate(${frame.x}px, ${frame.y}px)`,
@@ -482,32 +470,9 @@ export const Window = ({
           : "none",
         zIndex: win.z,
         display: visible ? "flex" : "none",
-        flexDirection: "column",
-        overflow: "hidden",
-        borderRadius: fullscreen ? 0 : 2,
-        border: (theme) =>
-          `1px solid ${active ? alpha(theme.palette.primary.main, 0.45) : theme.palette.divider}`,
-        backgroundColor: (theme) =>
-          alpha(theme.palette.background.paper, settings.windowOpacity),
-        // faint accent sheen from the top left corner
-        backgroundImage: (theme) =>
-          `linear-gradient(155deg, ${alpha(theme.palette.primary.main, 0.07)}, transparent 45%)`,
-        backdropFilter: glass ? "blur(14px)" : undefined,
-        boxShadow: (theme) =>
-          [
-            `0 ${active ? 32 : 12}px ${active ? 70 : 30}px -20px ${theme.palette.common.black}${active ? "cc" : "66"}`,
-            active
-              ? `0 0 48px -12px ${alpha(theme.palette.primary.main, 0.35)}`
-              : "",
-          ]
-            .filter(Boolean)
-            .join(", "),
       }}
     >
-      <Stack
-        direction="row"
-        alignItems="center"
-        spacing={2}
+      <div
         onPointerDown={startDrag}
         onPointerMove={moveDrag}
         onPointerUp={releaseDrag}
@@ -524,7 +489,7 @@ export const Window = ({
             {
               type: "item",
               label: "minimize",
-              icon: <RemoveIcon fontSize="small" />,
+              icon: <MinimizeIcon small />,
               onClick: () => dispatch({ type: "minimize", appId }),
             },
             ...(mobile
@@ -533,7 +498,7 @@ export const Window = ({
                   {
                     type: "item" as const,
                     label: win.maximized ? "restore" : "maximize",
-                    icon: <FilterNoneIcon fontSize="small" />,
+                    icon: <MaximizeIcon small />,
                     onClick: () => dispatch({ type: "toggleMaximize", appId }),
                   },
                 ]),
@@ -541,86 +506,36 @@ export const Window = ({
             {
               type: "item",
               label: "close",
-              icon: <CloseIcon fontSize="small" />,
+              icon: <CloseIcon small />,
               onClick: () => dispatch({ type: "close", appId }),
             },
           ]);
         }}
-        sx={{
-          flexShrink: 0,
-          px: 2,
-          py: 1.25,
-          userSelect: "none",
-          touchAction: "none",
-          cursor: mobile ? "default" : "grab",
-          backgroundColor: (theme) =>
-            alpha(theme.palette.background.default, settings.windowOpacity),
-          backgroundImage: (theme) =>
-            `linear-gradient(90deg, transparent 30%, ${alpha(theme.palette.primary.main, active ? 0.2 : 0.08)})`,
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-        }}
+        className={cx(styles.titleBar, mobile && styles.titleBarStatic)}
       >
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            "& .control-icon": { opacity: 0, transition: "opacity 100ms" },
-            "&:hover .control-icon, &:focus-within .control-icon": {
-              opacity: 1,
-            },
-          }}
-        >
+        <div className={styles.lights}>
           {lights.map(({ token, label }) => control(token, label))}
-        </Stack>
-        <Typography
-          variant="caption"
-          sx={{
-            fontFamily: monoFont,
-            color: active ? "text.primary" : "text.secondary",
-          }}
-        >
-          {title}
-        </Typography>
-      </Stack>
-      <Box
-        sx={{
-          flexGrow: 1,
-          minHeight: 0,
-          overflowX: "hidden",
-          overflowY: selfScrolling ? "hidden" : "auto",
-          scrollbarGutter: selfScrolling ? "auto" : "stable",
-          // stops the scrollbar short of the resize grip
-          "&::-webkit-scrollbar-track": {
-            marginBottom: (theme) => `${gripInset(theme) + 18}px`,
-          },
-        }}
+        </div>
+        <span className={cx("t-caption", styles.title)}>{title}</span>
+      </div>
+      {/* apps that scroll inside themselves fade their own scrolling parts */}
+      <div
+        ref={selfScrolling ? undefined : bodyRef}
+        className={cx(
+          styles.body,
+          selfScrolling ? styles.selfScrolling : "scroll-fade",
+        )}
       >
         {children}
-      </Box>
+      </div>
       {!fullscreen && (
-        <Box
+        <div
           aria-hidden
           onPointerDown={startResize}
           onPointerMove={moveResize}
           onPointerUp={() => (size.current = undefined)}
           onPointerCancel={() => (size.current = undefined)}
-          sx={{
-            position: "absolute",
-            right: 0,
-            bottom: 0,
-            boxSizing: "border-box",
-            width: (theme) => gripInset(theme) + 18,
-            height: (theme) => gripInset(theme) + 18,
-            pr: (theme) => `${gripInset(theme)}px`,
-            pb: (theme) => `${gripInset(theme)}px`,
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "flex-end",
-            cursor: "nwse-resize",
-            touchAction: "none",
-            color: "text.disabled",
-            "&:hover": { color: "text.secondary" },
-          }}
+          className={styles.grip}
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path
@@ -630,8 +545,8 @@ export const Window = ({
               strokeLinecap="round"
             />
           </svg>
-        </Box>
+        </div>
       )}
-    </Box>
+    </div>
   );
 };

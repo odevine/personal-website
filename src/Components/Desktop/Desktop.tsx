@@ -1,4 +1,5 @@
 import {
+  CSSProperties,
   useCallback,
   useEffect,
   useMemo,
@@ -6,14 +7,16 @@ import {
   useRef,
   useState,
 } from "react";
-import { alpha, Box, useMediaQuery } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import PushPinIcon from "@mui/icons-material/PushPin";
-import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
-import RemoveIcon from "@mui/icons-material/Remove";
-import { useTheme as useMuiTheme } from "@mui/material/styles";
 
+import {
+  CloseIcon,
+  MinimizeIcon,
+  OpenInNewIcon,
+  PinIcon,
+  PinOffIcon,
+} from "@/Components/ui/icons";
+import { TooltipProvider } from "@/Components/ui/Tooltip";
+import { MOBILE_QUERY, useMediaQuery } from "@/hooks/useMediaQuery";
 import { unlock } from "@/achievements";
 import { nodeExists } from "@/content/filesystem";
 import { useFilesystemVersion } from "@/content/useFilesystem";
@@ -41,6 +44,7 @@ import { ThemeFileSync } from "./ThemeFileSync";
 import { ViewerImage, ViewerProvider, useViewer } from "./ViewerContext";
 import { Window } from "./Window";
 import { Area, desktopReducer, initialState, topWindow } from "./windowReducer";
+import styles from "./Desktop.module.css";
 
 // Large soft shapes in the accent color that drift on slow, unsynchronized loops
 const blobs = [
@@ -83,48 +87,36 @@ const blobs = [
 ];
 
 const AccentBackdrop = () => {
-  const theme = useMuiTheme();
   const { settings } = useTheme();
-  const strength =
-    (theme.palette.mode === "light" ? 0.75 : 1) * settings.backdropIntensity;
+  const speed = Math.max(settings.backdropSpeed, 0.01);
 
   return (
-    <Box
-      aria-hidden
-      sx={{
-        position: "absolute",
-        inset: 0,
-        overflow: "hidden",
-        pointerEvents: "none",
-      }}
-    >
+    <div aria-hidden className={styles.layer}>
       {blobs.map((blob, i) => {
         const [from, mid, to] = blob.path;
         return (
-          <Box
+          <div
             key={i}
-            sx={{
-              position: "absolute",
-              top: blob.top,
-              left: blob.left,
-              width: blob.size,
-              height: blob.size,
-              borderRadius: "50%",
-              background: `radial-gradient(closest-side, ${alpha(theme.palette.primary.main, blob.alpha * strength)}, transparent)`,
-              willChange: "transform",
-              [`@keyframes drift${i}`]: {
-                "0%, 100%": { transform: from },
-                "33%": { transform: mid },
-                "66%": { transform: to },
-              },
-              animation: `drift${i} ${blob.duration / Math.max(settings.backdropSpeed, 0.01)}s ease-in-out infinite`,
-              animationPlayState:
-                settings.backdropSpeed === 0 ? "paused" : "running",
-            }}
+            className={styles.blob}
+            style={
+              {
+                top: blob.top,
+                left: blob.left,
+                width: blob.size,
+                height: blob.size,
+                "--blob-alpha": blob.alpha,
+                "--from": from,
+                "--mid": mid,
+                "--to": to,
+                animationDuration: `${blob.duration / speed}s`,
+                animationPlayState:
+                  settings.backdropSpeed === 0 ? "paused" : "running",
+              } as CSSProperties
+            }
           />
         );
       })}
-    </Box>
+    </div>
   );
 };
 
@@ -139,9 +131,8 @@ const DesktopShell = () => {
   const fsVersion = useFilesystemVersion();
   const [screen, setScreen] = useState<ScreenMode | null>(null);
   const { show: showImages } = useViewer();
-  const theme = useMuiTheme();
   const { settings } = useTheme();
-  const mobile = useMediaQuery(theme.breakpoints.down("md"));
+  const mobile = useMediaQuery(MOBILE_QUERY);
   const [state, dispatch] = useReducer(desktopReducer, initialState);
   const [area, setArea] = useState<Area>({ w: 0, h: 0 });
   const areaRef = useRef<HTMLDivElement>(null);
@@ -282,28 +273,28 @@ const DesktopShell = () => {
       entries.push({
         type: "item",
         label: "open",
-        icon: <OpenInNewIcon fontSize="small" />,
+        icon: <OpenInNewIcon small />,
         onClick: () => openApp(appId),
       });
     } else {
       entries.push({
         type: "item",
         label: win.minimized ? "restore" : "bring to front",
-        icon: <OpenInNewIcon fontSize="small" />,
+        icon: <OpenInNewIcon small />,
         onClick: () => openApp(appId),
       });
       if (!win.minimized) {
         entries.push({
           type: "item",
           label: "minimize",
-          icon: <RemoveIcon fontSize="small" />,
+          icon: <MinimizeIcon small />,
           onClick: () => dispatch({ type: "minimize", appId }),
         });
       }
       entries.push({
         type: "item",
         label: "close window",
-        icon: <CloseIcon fontSize="small" />,
+        icon: <CloseIcon small />,
         onClick: () => dispatch({ type: "close", appId }),
       });
     }
@@ -313,7 +304,7 @@ const DesktopShell = () => {
         ? {
             type: "item",
             label: "remove from dock",
-            icon: <PushPinOutlinedIcon fontSize="small" />,
+            icon: <PinOffIcon small />,
             // the explorer leads to every other app, so it always stays
             disabled: appId === "explorer",
             onClick: () => setDockApps(dockApps.filter((id) => id !== appId)),
@@ -321,17 +312,16 @@ const DesktopShell = () => {
         : {
             type: "item",
             label: "keep in dock",
-            icon: <PushPinIcon fontSize="small" />,
+            icon: <PinIcon small />,
             onClick: () => setDockApps([...dockApps, appId]),
           },
     );
     return entries;
   };
 
-  const line = theme.palette.divider;
   const pattern = {
-    dots: `radial-gradient(${line} 1px, transparent 1px)`,
-    grid: `linear-gradient(${line} 1px, transparent 1px), linear-gradient(90deg, ${line} 1px, transparent 1px)`,
+    dots: styles.dots,
+    grid: styles.grid,
     none: "",
   }[settings.background];
 
@@ -352,39 +342,13 @@ const DesktopShell = () => {
       <AchievementWatchers />
       <CustomCssSync />
       <DocumentNotes />
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100vh",
-          overflow: "hidden",
-          position: "relative",
-          backgroundColor: "background.default",
-        }}
-      >
+      <div className={styles.desktop}>
         <AccentBackdrop />
         <Presence />
         {pattern && (
-          <Box
-            aria-hidden
-            sx={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              backgroundImage: pattern,
-              backgroundSize: "24px 24px",
-            }}
-          />
+          <div aria-hidden className={`${styles.layer} ${pattern}`} />
         )}
-        <Box
-          ref={areaRef}
-          sx={{
-            position: "relative",
-            flexGrow: 1,
-            minHeight: 0,
-            isolation: "isolate",
-          }}
-        >
+        <div ref={areaRef} className={styles.area}>
           {state.windows.map((win) => (
             <Window
               key={win.appId}
@@ -403,7 +367,7 @@ const DesktopShell = () => {
             </Window>
           ))}
           <AchievementToast />
-        </Box>
+        </div>
 
         {dockPresent && (
           <Dock
@@ -422,7 +386,7 @@ const DesktopShell = () => {
             getMenu={dockMenu}
           />
         )}
-      </Box>
+      </div>
       {screen && <ScreenOverlay mode={screen} />}
     </DesktopContext.Provider>
   );
@@ -432,7 +396,9 @@ export const Desktop = () => (
   <EditorProvider>
     <ViewerProvider>
       <ContextMenuProvider>
-        <DesktopShell />
+        <TooltipProvider delayDuration={100}>
+          <DesktopShell />
+        </TooltipProvider>
       </ContextMenuProvider>
     </ViewerProvider>
   </EditorProvider>

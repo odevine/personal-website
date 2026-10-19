@@ -1,0 +1,79 @@
+.dock {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 8px;
+  pointer-events: none;
+}
+
+.tray {
+  display: flex;
+  gap: 4px;
+  padding: 4px 6px;
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  border-radius: calc(var(--radius) * 1.5);
+  background-color: var(--paper);
+  box-shadow: 0 8px 30px -12px
+    color-mix(in srgb, var(--primary) 40%, transparent);
+  pointer-events: auto;
+}
+
+.app {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--icon);
+  background-color: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  touch-action: none;
+  transition:
+    transform 120ms ease,
+    background-color 150ms ease;
+}
+
+.app svg {
+  font-size: 20px;
+}
+
+.app:hover {
+  background-color: var(--hover);
+  transform: translateY(-3px);
+}
+
+.app:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.active {
+  color: var(--primary);
+}
+
+.dot {
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--text-2);
+}
+
+.active .dot {
+  background-color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app {
+    transition: none;
+  }
+
+  .app:hover {
+    transform: none;
+  }
+}

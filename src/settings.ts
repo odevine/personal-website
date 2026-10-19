@@ -4,14 +4,16 @@ export type AccentKey =
 export interface Settings {
   accent: AccentKey;
   font: "sans" | "mono";
-  /** MUI base font size in px */
+  /** Body text size in px, the text styles scale from it */
   fontSize: number;
-  /** MUI base border radius in px */
+  /** Corner radius in px */
   radius: number;
   reduceMotion: boolean;
   background: "dots" | "grid" | "none";
   /** Window background opacity, 0.5 to 1 */
   windowOpacity: number;
+  /** Multiplier on the accent glow around the active window, 0 turns it off */
+  windowGlow: number;
   /** Multiplier on the backdrop drift speed, 0 pauses it */
   backdropSpeed: number;
   /** Multiplier on the backdrop accent opacity */
@@ -37,6 +39,7 @@ export const defaultSettings: Settings = {
   reduceMotion: false,
   background: "dots",
   windowOpacity: 1,
+  windowGlow: 0.5,
   backdropSpeed: 1.2,
   backdropIntensity: 0.8,
 };

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Box } from "@mui/material";
+
+import styles from "./ScreenOverlay.module.css";
 
 export type ScreenMode = "panic" | "boot" | "off";
 
@@ -56,27 +57,9 @@ export const ScreenOverlay = ({ mode }: { mode: ScreenMode }) => {
   }, [mode, countdown, step]);
 
   return (
-    <Box
+    <div
       role="alert"
-      sx={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 3000,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: mode === "off" ? "center" : "flex-start",
-        alignItems: mode === "off" ? "center" : "flex-start",
-        p: 3,
-        color: "#e6e6e6",
-        backgroundColor: "#000",
-        fontFamily: '"Noto Mono", monospace',
-        fontSize: 13,
-        lineHeight: 1.6,
-        whiteSpace: "pre",
-        overflow: "hidden",
-        // sits above the grayscale filter and any theme the page had
-        filter: "none",
-      }}
+      className={`${styles.screen} ${mode === "off" ? styles.centered : ""}`}
     >
       {mode === "off" && "it is now safe to turn off your computer"}
       {mode === "panic" && (
@@ -87,6 +70,6 @@ export const ScreenOverlay = ({ mode }: { mode: ScreenMode }) => {
         </>
       )}
       {mode === "boot" && bootLines.slice(0, step + 1).join("\n")}
-    </Box>
+    </div>
   );
 };

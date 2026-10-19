@@ -1,0 +1,266 @@
+/* Theme values come from themeVars() and are set on the root element at runtime */
+:root {
+  --font-mono: "Noto Mono", monospace;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --black: #000;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background-color: var(--bg);
+  font-family: var(--font-body);
+  font-size: calc(1rem * var(--fs));
+  line-height: 1.5;
+  letter-spacing: 0.00938em;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
+
+/* The scrollbar thumb is inset by a transparent border and rounds with the corner radius */
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--dimmed4);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: var(--thumb-radius);
+  min-height: 32px;
+  min-width: 32px;
+}
+
+*::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:active {
+  background-color: var(--dimmed3);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--dimmed4) transparent;
+  }
+}
+
+/* Only the ripple clip-path animates a theme change, with the new theme stacked on the old */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* Text styles, scaled by the text size setting */
+.t-body1 {
+  font-size: calc(1rem * var(--fs));
+  line-height: 1.5;
+  letter-spacing: 0.00938em;
+}
+
+.t-body2 {
+  font-size: calc(0.875rem * var(--fs));
+  line-height: 1.43;
+  letter-spacing: 0.01071em;
+}
+
+.t-subtitle1 {
+  font-size: calc(1rem * var(--fs));
+  line-height: 1.75;
+  letter-spacing: 0.00938em;
+}
+
+.t-subtitle2 {
+  font-size: calc(0.875rem * var(--fs));
+  font-weight: 500;
+  line-height: 1.57;
+  letter-spacing: 0.00714em;
+}
+
+.t-caption {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  letter-spacing: 0.03333em;
+}
+
+.t-h5 {
+  font-family: var(--font-mono);
+  font-size: calc(1.5rem * var(--fs));
+  font-weight: 600;
+  line-height: 1.334;
+}
+
+.t-mono {
+  font-family: var(--font-mono);
+}
+
+.t-secondary {
+  color: var(--text-2);
+}
+
+.t-nowrap {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* edges fade out where more content is scrolled out of view, sized by useScrollFade */
+.scroll-fade {
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  --fade-left: 0px;
+  --fade-right: 0px;
+  --fade-inset-top: 0px;
+  --fade-inset-left: 0px;
+
+  mask-image:
+    linear-gradient(
+      to bottom,
+      #000 var(--fade-inset-top),
+      transparent var(--fade-inset-top),
+      #000 calc(var(--fade-inset-top) + var(--fade-top)),
+      #000 calc(100% - var(--fade-bottom)),
+      transparent
+    ),
+    linear-gradient(
+      to right,
+      #000 var(--fade-inset-left),
+      transparent var(--fade-inset-left),
+      #000 calc(var(--fade-inset-left) + var(--fade-left)),
+      #000 calc(100% - var(--fade-right)),
+      transparent
+    );
+  mask-composite: intersect;
+}
+
+.icon {
+  flex-shrink: 0;
+  font-size: 1.5rem;
+}
+
+.icon-sm {
+  font-size: 1.25rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:root[data-reduce-motion="true"] *,
+:root[data-reduce-motion="true"] *::before,
+:root[data-reduce-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Without system/theme.json everything is black on white, square and one size, like a page with no stylesheet */
+:root[data-theme-missing="true"] :is(html, body, body *, body *::before, body *::after) {
+  background-color: #fff !important;
+  background-image: none !important;
+  color: #000 !important;
+  border-color: #000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  mask-image: none !important;
+  letter-spacing: normal !important;
+  font-family: "Courier New", Courier, monospace !important;
+  font-size: 1rem !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  text-transform: none !important;
+  outline-color: #000 !important;
+  /* nothing fades, animates, or changes the pointer, so hovering shows nothing new */
+  opacity: 1 !important;
+  transition: none !important;
+  animation: none !important;
+  cursor: auto !important;
+}
+
+:root[data-theme-missing="true"] {
+  background-color: #fff !important;
+}
+
+/* the dock lift and tooltips only appear on hover */
+:root[data-theme-missing="true"] body [data-dock-app]:hover {
+  transform: none;
+}
+
+:root[data-theme-missing="true"] body [data-tooltip] {
+  display: none !important;
+}
+
+:root[data-theme-missing="true"] body a {
+  color: #0000ee !important;
+  text-decoration: underline !important;
+}
+
+:root[data-theme-missing="true"] :is(body button, body input) {
+  border: 1px solid #000 !important;
+}
+
+:root[data-fonts-missing="true"] :is(body, body *) {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+:root[data-fonts-missing="true"] a {
+  color: #0000ee !important;
+  text-decoration: underline !important;
+}

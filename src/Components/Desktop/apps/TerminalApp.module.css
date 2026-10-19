@@ -1,0 +1,49 @@
+.terminal {
+  min-height: 100%;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  cursor: text;
+}
+
+.terminal a {
+  text-underline-offset: 3px;
+}
+
+.entry {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.echo {
+  color: var(--text);
+}
+
+.pre {
+  white-space: pre;
+}
+
+.link {
+  color: var(--secondary);
+}
+
+.promptLine {
+  display: flex;
+  gap: 8px;
+}
+
+.prompt {
+  white-space: nowrap;
+}
+
+.input {
+  flex-grow: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  background: transparent;
+  caret-color: var(--secondary);
+}

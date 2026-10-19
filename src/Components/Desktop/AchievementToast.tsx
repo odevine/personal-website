@@ -1,12 +1,11 @@
 import { useEffect } from "react";
-import { alpha, Box, Typography } from "@mui/material";
-import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
 
+import { TrophyIcon } from "@/Components/ui/icons";
 import { dismissToast, useAchievements } from "@/achievements";
 import { achievements, achievementsMarkdown } from "@/content/achievements";
 import { ACHIEVEMENTS_PATH } from "@/content/files";
-import { monoFont } from "@/themes";
 import { useDesktop } from "./DesktopContext";
+import styles from "./AchievementToast.module.css";
 
 const SHOW_MS = 4800;
 // Several unlocks at once move along faster
@@ -27,27 +26,12 @@ export const AchievementToast = () => {
   }, [id, queued]);
 
   return (
-    <Box
-      role="status"
-      aria-live="polite"
-      sx={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 8,
-        px: 1,
-        display: "flex",
-        justifyContent: "center",
-        pointerEvents: "none",
-        // above every window, which stack by a counter in the area
-        zIndex: 1000000,
-      }}
-    >
+    <div role="status" aria-live="polite" className={styles.shelf}>
       {def && (
-        <Box
+        <button
           key={def.id}
-          component="button"
           type="button"
+          className={styles.toast}
           onClick={() => {
             openFileAs(
               ACHIEVEMENTS_PATH,
@@ -56,65 +40,17 @@ export const AchievementToast = () => {
             );
             dismissToast();
           }}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1.5,
-            width: "100%",
-            maxWidth: 340,
-            px: 1.5,
-            py: 1,
-            textAlign: "left",
-            font: "inherit",
-            cursor: "pointer",
-            pointerEvents: "auto",
-            color: "text.primary",
-            backgroundColor: (theme) => theme.palette.background.paper,
-            border: (theme) =>
-              `1px solid ${alpha(theme.palette.primary.main, 0.45)}`,
-            borderRadius: 2,
-            boxShadow: (theme) =>
-              `0 12px 30px -16px ${theme.palette.common.black}`,
-            "@keyframes achievement-in": {
-              from: { opacity: 0, transform: "translateY(8px)" },
-              to: { opacity: 1, transform: "none" },
-            },
-            animation: "achievement-in 200ms ease-out",
-            "@media (prefers-reduced-motion: reduce)": { animation: "none" },
-            ":root[data-reduce-motion='true'] &": { animation: "none" },
-            "&:focus-visible": {
-              outline: (theme) => `2px solid ${theme.palette.primary.main}`,
-              outlineOffset: 2,
-            },
-          }}
         >
-          <EmojiEventsOutlinedIcon
-            fontSize="small"
-            sx={{ flexShrink: 0, color: "primary.main" }}
-          />
-          <Box sx={{ minWidth: 0 }}>
-            <Typography
-              variant="caption"
-              sx={{ display: "block", color: "text.secondary" }}
-            >
-              achievement unlocked
-            </Typography>
-            <Typography
-              variant="body2"
-              noWrap
-              sx={{ fontFamily: monoFont, fontWeight: 500 }}
-            >
+          <TrophyIcon small className={styles.icon} />
+          <span className={styles.text}>
+            <span className="t-caption t-secondary">achievement unlocked</span>
+            <span className={`t-body2 t-mono t-nowrap ${styles.name}`}>
               {def.name}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ display: "block", color: "text.secondary" }}
-            >
-              {def.description}
-            </Typography>
-          </Box>
-        </Box>
+            </span>
+            <span className="t-caption t-secondary">{def.description}</span>
+          </span>
+        </button>
       )}
-    </Box>
+    </div>
   );
 };

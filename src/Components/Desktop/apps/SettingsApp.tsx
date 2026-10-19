@@ -1,37 +1,22 @@
-import { ReactNode } from "react";
-import {
-  Box,
-  Button,
-  Slider,
-  Stack,
-  Switch,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
+import { CSSProperties, ReactNode } from "react";
 
-import { AccentKey, MAX_RADIUS, Settings, accentKeys } from "@/settings";
+import { Button } from "@/Components/ui/Button";
+import { cx } from "@/Components/ui/cx";
+import { CheckIcon } from "@/Components/ui/icons";
+import { Slider } from "@/Components/ui/Slider";
+import { ToggleGroup } from "@/Components/ui/ToggleGroup";
+import { AccentKey, MAX_RADIUS, accentKeys } from "@/settings";
 import { useTheme } from "@/ThemeContext";
 import { colorSchemes, getScheme } from "@/themes";
 import { transitionToScheme } from "@/themeTransition";
-
-const labelSx = {
-  flexShrink: 0,
-  width: 124,
-  lineHeight: 1.4,
-  whiteSpace: "nowrap",
-  color: "text.secondary",
-};
+import styles from "./SettingsApp.module.css";
 
 // Label on the left and the control filling the rest of the line
 const Row = ({ title, children }: { title: string; children: ReactNode }) => (
-  <Stack direction="row" alignItems="center" spacing={1.5}>
-    <Typography variant="caption" sx={labelSx}>
-      {title}
-    </Typography>
-    <Box sx={{ flexGrow: 1, minWidth: 0 }}>{children}</Box>
-  </Stack>
+  <div className={styles.row}>
+    <span className={`t-caption ${styles.label}`}>{title}</span>
+    <div className={styles.control}>{children}</div>
+  </div>
 );
 
 const SliderRow = ({
@@ -52,30 +37,22 @@ const SliderRow = ({
   onChange: (value: number) => void;
 }) => (
   <Row title={title}>
-    <Stack direction="row" alignItems="center" spacing={1.5}>
+    <div className={styles.sliderRow}>
       <Slider
-        size="small"
-        color="primary"
         aria-label={title}
         value={value}
         min={min}
         max={max}
         step={step}
-        onChange={(_, next) => onChange(next as number)}
-        sx={{ flexGrow: 1, my: 0, py: "6px", mx: 0.5 }}
+        onChange={onChange}
+        className={styles.slider}
       />
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ width: 44, flexShrink: 0, textAlign: "right" }}
-      >
+      <span className={`t-caption t-secondary ${styles.value}`}>
         {format(value)}
-      </Typography>
-    </Stack>
+      </span>
+    </div>
   </Row>
 );
-
-const compactToggles = { "& .MuiToggleButton-root": { py: 0.25 } };
 
 export const SettingsApp = () => {
   const {
@@ -92,38 +69,29 @@ export const SettingsApp = () => {
 
   if (themeMissing) {
     return (
-      <Stack spacing={1} sx={{ p: 2.5 }}>
-        <Typography variant="body2">settings unavailable</Typography>
-        <Typography variant="caption" color="text.secondary">
+      <div className={styles.unavailable}>
+        <p className="t-body2">settings unavailable</p>
+        <span className="t-caption t-secondary">
           system/theme.json is missing, so there is nothing to configure.
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
+        </span>
+        <span className="t-caption t-secondary">
           recovery: sudo restore ~/system/theme.json, or refresh the page
-        </Typography>
-      </Stack>
+        </span>
+      </div>
     );
   }
 
   return (
-    <Stack spacing={1.5} sx={{ p: 1.75 }}>
-      <Stack spacing={0.75}>
-        <Typography variant="caption" sx={labelSx}>
-          color scheme
-        </Typography>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(108px, 1fr))",
-            gap: 0.75,
-          }}
-        >
+    <div className={styles.settings}>
+      <div className={styles.schemes}>
+        <span className={`t-caption ${styles.label}`}>color scheme</span>
+        <div className={styles.schemeGrid}>
           {colorSchemes.map((option) => {
             const selected = option.name === scheme;
             const colors = option.palette;
             return (
-              <Box
+              <button
                 key={option.name}
-                component="button"
                 type="button"
                 aria-pressed={selected}
                 onClick={(event) =>
@@ -135,38 +103,20 @@ export const SettingsApp = () => {
                     event.clientY,
                   )
                 }
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: 0.5,
-                  p: 1,
-                  cursor: "pointer",
-                  font: "inherit",
-                  borderRadius: 2,
-                  color: colors.text,
-                  backgroundColor: colors.background,
-                  border: (theme) =>
-                    `2px solid ${selected ? theme.palette.primary.main : colors.dimmed5}`,
-                  "&:hover": {
-                    borderColor: (theme) => theme.palette.primary.main,
-                  },
-                }}
+                className={cx(styles.scheme, selected && styles.selected)}
+                style={
+                  {
+                    color: colors.text,
+                    backgroundColor: colors.background,
+                    "--scheme-border": colors.dimmed5,
+                  } as CSSProperties
+                }
               >
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  sx={{ width: "100%" }}
-                >
-                  <Typography variant="body2" sx={{ color: "inherit" }}>
-                    {option.label}
-                  </Typography>
-                  {selected && (
-                    <CheckIcon sx={{ fontSize: 16, color: "primary.main" }} />
-                  )}
-                </Stack>
-                <Stack direction="row" spacing={0.5}>
+                <span className={styles.schemeName}>
+                  <span className="t-body2">{option.label}</span>
+                  {selected && <CheckIcon className={styles.check} />}
+                </span>
+                <span className={styles.swatches}>
                   {[
                     colors.accent1,
                     colors.accent2,
@@ -175,69 +125,44 @@ export const SettingsApp = () => {
                     colors.accent5,
                     colors.accent6,
                   ].map((color, i) => (
-                    <Box
+                    <span
                       key={i}
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: "50%",
-                        backgroundColor: color,
-                      }}
+                      className={styles.swatch}
+                      style={{ backgroundColor: color }}
                     />
                   ))}
-                </Stack>
-              </Box>
+                </span>
+              </button>
             );
           })}
-        </Box>
-      </Stack>
+        </div>
+      </div>
 
       <Row title="accent">
-        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+        <div className={styles.accents}>
           {accentKeys.map((key) => (
-            <Box
+            <button
               key={key}
-              component="button"
               type="button"
               aria-label={
                 key === "default" ? "default accent" : `accent ${key.slice(-1)}`
               }
               aria-pressed={settings.accent === key}
               onClick={() => updateSettings({ accent: key })}
-              sx={{
-                width: 22,
-                height: 22,
-                p: 0,
-                cursor: "pointer",
-                borderRadius: "50%",
-                border: "2px solid transparent",
-                backgroundColor: accentColor(key),
-                outline: (theme) =>
-                  settings.accent === key
-                    ? `2px solid ${theme.palette.text.primary}`
-                    : "none",
-                outlineOffset: 2,
-              }}
+              className={styles.accent}
+              style={{ backgroundColor: accentColor(key) }}
             />
           ))}
-        </Stack>
+        </div>
       </Row>
 
       <Row title="typeface">
-        <ToggleButtonGroup
-          exclusive
-          fullWidth
-          color="primary"
-          sx={compactToggles}
-          size="small"
+        <ToggleGroup
+          aria-label="typeface"
+          options={["sans", "mono"] as const}
           value={settings.font}
-          onChange={(_, font: Settings["font"] | null) =>
-            font && updateSettings({ font })
-          }
-        >
-          <ToggleButton value="sans">sans</ToggleButton>
-          <ToggleButton value="mono">mono</ToggleButton>
-        </ToggleButtonGroup>
+          onChange={(font) => updateSettings({ font })}
+        />
       </Row>
 
       <SliderRow
@@ -270,22 +195,23 @@ export const SettingsApp = () => {
         onChange={(v) => updateSettings({ windowOpacity: v / 100 })}
       />
 
+      <SliderRow
+        title="window glow"
+        value={Math.round(settings.windowGlow * 100)}
+        min={0}
+        max={200}
+        step={5}
+        format={(v) => (v === 0 ? "off" : `${v}%`)}
+        onChange={(v) => updateSettings({ windowGlow: v / 100 })}
+      />
+
       <Row title="background">
-        <ToggleButtonGroup
-          exclusive
-          fullWidth
-          color="primary"
-          sx={compactToggles}
-          size="small"
+        <ToggleGroup
+          aria-label="background"
+          options={["dots", "grid", "none"] as const}
           value={settings.background}
-          onChange={(_, background: Settings["background"] | null) =>
-            background && updateSettings({ background })
-          }
-        >
-          <ToggleButton value="dots">dots</ToggleButton>
-          <ToggleButton value="grid">grid</ToggleButton>
-          <ToggleButton value="none">none</ToggleButton>
-        </ToggleButtonGroup>
+          onChange={(background) => updateSettings({ background })}
+        />
       </Row>
 
       <SliderRow
@@ -309,23 +235,17 @@ export const SettingsApp = () => {
       />
 
       <Row title="reduce motion">
-        <Switch
-          size="small"
-          color="primary"
-          checked={settings.reduceMotion}
-          onChange={(_, reduceMotion) => updateSettings({ reduceMotion })}
-          inputProps={{ "aria-label": "reduce motion" }}
+        <ToggleGroup
+          aria-label="reduce motion"
+          options={["off", "on"] as const}
+          value={settings.reduceMotion ? "on" : "off"}
+          onChange={(value) => updateSettings({ reduceMotion: value === "on" })}
         />
       </Row>
 
-      <Button
-        size="small"
-        variant="outlined"
-        color="primary"
-        onClick={resetSettings}
-      >
+      <Button variant="outlined" onClick={resetSettings}>
         reset appearance
       </Button>
-    </Stack>
+    </div>
   );
 };

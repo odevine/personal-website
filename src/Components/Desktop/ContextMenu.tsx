@@ -1,5 +1,4 @@
 import {
-  MouseEvent as ReactMouseEvent,
   PropsWithChildren,
   ReactNode,
   createContext,
@@ -7,19 +6,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import {
-  Divider,
-  ListItemIcon,
-  ListItemText,
-  ListSubheader,
-  Menu,
-  MenuItem,
-} from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
-import { monoFont } from "@/themes";
+import { CheckIcon } from "@/Components/ui/icons";
+import styles from "./ContextMenu.module.css";
 
 export type MenuEntry =
   | {
@@ -69,16 +62,26 @@ export const copyText = async (text: string) => {
 // desktop, and turns a long press on a touch screen into a right-click
 export const ContextMenuProvider = ({ children }: PropsWithChildren) => {
   const [menu, setMenu] = useState<{
+    id: number;
     x: number;
     y: number;
     entries: MenuEntry[];
   } | null>(null);
+  // focus goes back where it was when the menu closes
+  const returnFocus = useRef<HTMLElement | null>(null);
 
-  const show = useCallback(
-    (point: Point, entries: MenuEntry[]) =>
-      setMenu({ x: point.clientX, y: point.clientY, entries }),
-    [],
-  );
+  const show = useCallback((point: Point, entries: MenuEntry[]) => {
+    if (document.activeElement instanceof HTMLElement) {
+      returnFocus.current = document.activeElement;
+    }
+    // each menu gets a fresh id, so opening one over another places it anew
+    setMenu((current) => ({
+      id: (current?.id ?? 0) + 1,
+      x: point.clientX,
+      y: point.clientY,
+      entries,
+    }));
+  }, []);
   const close = () => setMenu(null);
 
   useEffect(() => {
@@ -152,81 +155,70 @@ export const ContextMenuProvider = ({ children }: PropsWithChildren) => {
   return (
     <ContextMenuContext.Provider value={api}>
       {children}
-      <Menu
-        open={Boolean(menu)}
-        onClose={close}
-        anchorReference="anchorPosition"
-        anchorPosition={menu ? { top: menu.y, left: menu.x } : undefined}
-        // a right-click outside the menu closes it instead of opening another
-        slotProps={{
-          root: {
-            onContextMenu: (event: ReactMouseEvent) => {
-              event.preventDefault();
-              close();
-            },
-          },
-          paper: {
-            sx: {
-              minWidth: 190,
-              backgroundImage: "none",
-              borderRadius: (theme) => `${theme.shape.borderRadius}px`,
-              border: (theme) => `1px solid ${theme.palette.divider}`,
-              fontFamily: monoFont,
-            },
-          },
-        }}
-        MenuListProps={{ dense: true, sx: { py: 0.5 } }}
-      >
-        {menu?.entries.map((entry, i) => {
-          if (entry.type === "divider") return <Divider key={i} />;
-          if (entry.type === "label") {
-            return (
-              <ListSubheader
-                key={i}
-                disableSticky
-                sx={{
-                  lineHeight: "26px",
-                  fontFamily: monoFont,
-                  fontSize: 11,
-                  background: "transparent",
-                }}
-              >
-                {entry.label}
-              </ListSubheader>
-            );
-          }
-          return (
-            <MenuItem
-              key={i}
-              disabled={entry.disabled}
-              onClick={() => {
-                close();
-                entry.onClick();
+      {menu && (
+        <DropdownMenu.Root
+          key={menu.id}
+          open
+          onOpenChange={(open) => !open && close()}
+        >
+          {/* an empty anchor at the pointer, the menu opens from it */}
+          <DropdownMenu.Trigger asChild>
+            <span
+              aria-hidden
+              className={styles.anchor}
+              style={{ left: menu.x, top: menu.y }}
+            />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              className={styles.menu}
+              side="bottom"
+              align="start"
+              collisionPadding={8}
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                returnFocus.current?.focus();
               }}
-              sx={{ fontFamily: monoFont, fontSize: 12.5, gap: 0.5 }}
             >
-              {entry.icon && (
-                <ListItemIcon sx={{ minWidth: 28, color: "inherit" }}>
-                  {entry.icon}
-                </ListItemIcon>
-              )}
-              <ListItemText
-                primaryTypographyProps={{
-                  sx: { fontSize: "inherit", fontFamily: "inherit" },
-                }}
-                sx={{ pl: entry.icon ? 0 : 3.5 }}
-              >
-                {entry.label}
-              </ListItemText>
-              {entry.checked && (
-                <CheckIcon
-                  sx={{ fontSize: 16, ml: 2, color: "primary.main" }}
-                />
-              )}
-            </MenuItem>
-          );
-        })}
-      </Menu>
+              {menu.entries.map((entry, i) => {
+                if (entry.type === "divider") {
+                  return (
+                    <DropdownMenu.Separator
+                      key={i}
+                      className={styles.divider}
+                    />
+                  );
+                }
+                if (entry.type === "label") {
+                  return (
+                    <DropdownMenu.Label key={i} className={styles.label}>
+                      {entry.label}
+                    </DropdownMenu.Label>
+                  );
+                }
+                return (
+                  <DropdownMenu.Item
+                    key={i}
+                    className={styles.item}
+                    disabled={entry.disabled}
+                    onSelect={entry.onClick}
+                  >
+                    {entry.icon && (
+                      <span className={styles.icon}>{entry.icon}</span>
+                    )}
+                    <span
+                      className={entry.icon ? styles.text : styles.textInset}
+                    >
+                      {entry.label}
+                    </span>
+                    {entry.checked && <CheckIcon className={styles.check} />}
+                  </DropdownMenu.Item>
+                );
+              })}
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      )}
     </ContextMenuContext.Provider>
   );
 };

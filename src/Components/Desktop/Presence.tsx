@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Box } from "@mui/material";
+
+import styles from "./Presence.module.css";
 
 import { reducedMotion } from "@/motion";
 import {
@@ -100,20 +101,11 @@ const CreatureShape = ({
   }, []);
 
   return (
-    <Box
+    <div
       ref={ref}
-      sx={{
-        position: "absolute",
+      className={styles.creature}
+      style={{
         top: `${creature.top}%`,
-        left: 0,
-        width: "55vw",
-        height: "12vh",
-        opacity: 0,
-        borderRadius: "50%",
-        background:
-          "radial-gradient(closest-side, rgba(0,0,0,0.7), transparent)",
-        boxShadow: "0 0 90px 10px rgba(60,255,90,0.1)",
-        filter: "blur(6px)",
         transform: creature.fromLeft ? undefined : "scaleX(-1)",
       }}
     />
@@ -170,15 +162,7 @@ export const Presence = () => {
   }, [active]);
 
   return (
-    <Box
-      aria-hidden
-      sx={{
-        position: "absolute",
-        inset: 0,
-        overflow: "hidden",
-        pointerEvents: "none",
-      }}
-    >
+    <div aria-hidden className={styles.layer}>
       {creatures.map((creature) => (
         <CreatureShape
           key={creature.id}
@@ -190,6 +174,6 @@ export const Presence = () => {
           }
         />
       ))}
-    </Box>
+    </div>
   );
 };

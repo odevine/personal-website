@@ -3,11 +3,13 @@ import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
-import { alpha, Box, Link, useTheme } from "@mui/material";
 
+import { Link } from "@/Components/ui/Link";
 import { repoForPath } from "@/content/filesystem";
-import { monoFont } from "@/themes";
+import { useTheme } from "@/ThemeContext";
+import { getScheme } from "@/themes";
 import { Language, highlight } from "./highlight";
+import styles from "./MarkdownPreview.module.css";
 
 const codeLanguage = (fence: string | undefined): Language => {
   const name = /language-(\w+)/.exec(fence ?? "")?.[1];
@@ -37,36 +39,19 @@ const CodeBlock = ({
   text: string;
   language: Language;
 }) => (
-  <Box
-    component="pre"
-    sx={{
-      m: 0,
-      p: 1.5,
-      overflowX: "auto",
-      fontFamily: monoFont,
-      fontSize: 12.5,
-      lineHeight: 1.6,
-      borderRadius: (theme) => `${theme.shape.borderRadius}px`,
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-      backgroundColor: (theme) => alpha(theme.palette.text.primary, 0.04),
-    }}
-  >
+  <pre className={styles.code}>
     <code>
       {highlight(text, language).map((tokens, i) => (
-        <div key={i} style={{ minHeight: "1.6em" }}>
+        <div key={i} className={styles.codeLine}>
           {tokens.map(([part, token], j) => (
-            <Box
-              key={j}
-              component="span"
-              sx={{ color: (theme) => theme.palette.syntax[token] }}
-            >
+            <span key={j} style={{ color: `var(--syntax-${token})` }}>
               {part}
-            </Box>
+            </span>
           ))}
         </div>
       ))}
     </code>
-  </Box>
+  </pre>
 );
 
 const textOf = (node: ReactNode): string =>
@@ -84,7 +69,8 @@ interface Props {
 
 // Renders markdown, including the GitHub flavored extras and the HTML READMEs use
 const MarkdownPreview = ({ source, path }: Props) => {
-  const theme = useTheme();
+  const { scheme, themeMissing } = useTheme();
+  const dark = themeMissing || getScheme(scheme).mode === "dark";
   const repo = repoForPath(path);
   const slug = repo?.url.replace("https://github.com/", "");
 
@@ -100,65 +86,7 @@ const MarkdownPreview = ({ source, path }: Props) => {
   };
 
   return (
-    <Box
-      sx={{
-        p: 2.5,
-        fontSize: "0.875rem",
-        lineHeight: 1.7,
-        wordBreak: "break-word",
-        "& > :first-child": { mt: 0 },
-        "& h1, & h2, & h3, & h4": {
-          fontFamily: monoFont,
-          fontWeight: 600,
-          lineHeight: 1.3,
-          mt: 3,
-          mb: 1.25,
-        },
-        "& h1": { fontSize: "1.6rem" },
-        "& h2": {
-          fontSize: "1.3rem",
-          pb: 0.5,
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-        },
-        "& h3": { fontSize: "1.1rem" },
-        "& p, & ul, & ol, & blockquote, & table, & details": { mt: 0, mb: 1.5 },
-        "& ul, & ol": { pl: 3 },
-        "& li > p": { my: 0 },
-        "& img": { maxWidth: "100%", height: "auto" },
-        "& hr": {
-          my: 2,
-          border: 0,
-          borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-        },
-        "& blockquote": {
-          ml: 0,
-          pl: 2,
-          color: "text.secondary",
-          borderLeft: (theme) => `3px solid ${theme.palette.primary.main}`,
-        },
-        "& table": {
-          borderCollapse: "collapse",
-          display: "block",
-          overflowX: "auto",
-        },
-        "& th, & td": {
-          px: 1.25,
-          py: 0.5,
-          textAlign: "left",
-          border: (theme) => `1px solid ${theme.palette.divider}`,
-        },
-        "& th": { fontWeight: 600 },
-        "& :not(pre) > code": {
-          px: 0.5,
-          py: 0.125,
-          fontFamily: monoFont,
-          fontSize: "0.85em",
-          borderRadius: "4px",
-          backgroundColor: (theme) => alpha(theme.palette.text.primary, 0.08),
-        },
-        "& pre": { mb: 1.5 },
-      }}
-    >
+    <div className={styles.markdown}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         remarkRehypeOptions={{ allowDangerousHtml: true }}
@@ -168,7 +96,6 @@ const MarkdownPreview = ({ source, path }: Props) => {
           a: ({ href, children }) => (
             <Link
               href={href}
-              underline="hover"
               {...(href?.startsWith("#")
                 ? {}
                 : { target: "_blank", rel: "noopener noreferrer" })}
@@ -188,8 +115,7 @@ const MarkdownPreview = ({ source, path }: Props) => {
               const props = node.props as { media?: string };
               return (
                 node.type === "source" &&
-                /prefers-color-scheme:\s*dark/.test(props.media ?? "") ===
-                  (theme.palette.mode === "dark")
+                /prefers-color-scheme:\s*dark/.test(props.media ?? "") === dark
               );
             }) as ReactElement<{ srcSet?: string | string[] }> | undefined;
             const set = variant?.props.srcSet;
@@ -219,7 +145,7 @@ const MarkdownPreview = ({ source, path }: Props) => {
       >
         {source}
       </ReactMarkdown>
-    </Box>
+    </div>
   );
 };
 

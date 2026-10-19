@@ -1,0 +1,161 @@
+/* the resize grip sits this far from the corner, so it clears the rounded edge */
+.window {
+  --grip-inset: max(4px, calc(var(--radius) * 0.6 + 3px));
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  flex-direction: column;
+  overflow: hidden;
+  transform-origin: 0 0;
+  border: 1px solid var(--divider);
+  border-radius: calc(var(--radius) * 2);
+  background-color: color-mix(
+    in srgb,
+    var(--paper) var(--window-opacity),
+    transparent
+  );
+  /* faint accent sheen from the top left corner */
+  background-image: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--primary) 7%, transparent),
+    transparent 45%
+  );
+  box-shadow: 0 12px 30px -20px rgba(0, 0, 0, 0.4);
+}
+
+.active {
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+  box-shadow:
+    0 32px 70px -20px rgba(0, 0, 0, 0.8),
+    0 0 48px -12px
+      color-mix(
+        in srgb,
+        var(--primary) calc(35% * var(--window-glow)),
+        transparent
+      );
+}
+
+.fullscreen {
+  border-radius: 0;
+}
+
+.glass {
+  backdrop-filter: blur(14px);
+}
+
+.titleBar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--divider);
+  background-color: color-mix(
+    in srgb,
+    var(--bg) var(--window-opacity),
+    transparent
+  );
+  background-image: linear-gradient(
+    90deg,
+    transparent 30%,
+    color-mix(in srgb, var(--primary) 8%, transparent)
+  );
+  user-select: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+.active .titleBar {
+  background-image: linear-gradient(
+    90deg,
+    transparent 30%,
+    color-mix(in srgb, var(--primary) 20%, transparent)
+  );
+}
+
+.titleBarStatic {
+  cursor: default;
+}
+
+.lights {
+  display: flex;
+  gap: 8px;
+}
+
+.light {
+  display: grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: rgba(0, 0, 0, 0.65);
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.active .light {
+  opacity: 1;
+}
+
+.light:focus-visible {
+  outline: 2px solid var(--text);
+}
+
+.lightIcon {
+  opacity: 0;
+  transition: opacity 100ms;
+}
+
+.lights:hover .lightIcon,
+.lights:focus-within .lightIcon {
+  opacity: 1;
+}
+
+.title {
+  font-family: var(--font-mono);
+  color: var(--text-2);
+}
+
+.active .title {
+  color: var(--text);
+}
+
+.body {
+  flex-grow: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+/* stops the scrollbar short of the resize grip */
+.body::-webkit-scrollbar-track {
+  margin-bottom: calc(var(--grip-inset) + 18px);
+}
+
+.selfScrolling {
+  overflow-y: hidden;
+  scrollbar-gutter: auto;
+}
+
+.grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: calc(var(--grip-inset) + 18px);
+  height: calc(var(--grip-inset) + 18px);
+  padding: 0 var(--grip-inset) var(--grip-inset) 0;
+  color: var(--text-disabled);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.grip:hover {
+  color: var(--text-2);
+}

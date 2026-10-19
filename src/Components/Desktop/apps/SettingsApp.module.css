@@ -1,0 +1,123 @@
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+.unavailable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+}
+
+/* every row is as tall as a toggle group, whatever control it holds */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 28px;
+}
+
+.label {
+  flex-shrink: 0;
+  width: 124px;
+  color: var(--text-2);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.control {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider {
+  flex-grow: 1;
+  margin: 0 4px;
+  padding: 6px 0;
+}
+
+.value {
+  flex-shrink: 0;
+  width: 44px;
+  text-align: right;
+}
+
+.schemes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schemeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 6px;
+}
+
+.scheme {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px;
+  border: 2px solid var(--scheme-border);
+  border-radius: calc(var(--radius) * 2);
+  cursor: pointer;
+}
+
+.scheme:hover,
+.selected {
+  border-color: var(--primary);
+}
+
+.schemeName {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.check {
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.swatches {
+  display: flex;
+  gap: 4px;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.accents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.accent {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  outline-offset: 2px;
+}
+
+.accent[aria-pressed="true"] {
+  outline: 2px solid var(--text);
+}

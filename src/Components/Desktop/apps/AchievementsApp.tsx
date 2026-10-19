@@ -1,15 +1,9 @@
 import { useState } from "react";
-import {
-  alpha,
-  Box,
-  Button,
-  LinearProgress,
-  Stack,
-  Typography,
-} from "@mui/material";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
+import { Button } from "@/Components/ui/Button";
+import { cx } from "@/Components/ui/cx";
+import { LockIcon, TrophyIcon } from "@/Components/ui/icons";
+import { Progress } from "@/Components/ui/Progress";
 import { useAchievements } from "@/achievements";
 import {
   achievementGroups,
@@ -19,8 +13,8 @@ import {
 } from "@/content/achievements";
 import { ACHIEVEMENTS_PATH } from "@/content/files";
 import { formatDate } from "@/format";
-import { monoFont } from "@/themes";
 import { useDesktop } from "../DesktopContext";
+import styles from "./AchievementsApp.module.css";
 
 export const AchievementsApp = () => {
   const { unlocked } = useAchievements();
@@ -29,18 +23,13 @@ export const AchievementsApp = () => {
   const [hinted, setHinted] = useState<Record<string, boolean>>({});
 
   return (
-    <Stack spacing={2.5} sx={{ p: 2.5 }}>
-      <Box>
-        <Stack
-          direction="row"
-          alignItems="baseline"
-          justifyContent="space-between"
-        >
-          <Typography variant="h5">
+    <div className={styles.achievements}>
+      <div>
+        <div className={styles.summary}>
+          <h5 className="t-h5">
             {done} / {achievements.length}
-          </Typography>
+          </h5>
           <Button
-            size="small"
             onClick={() =>
               openFileAs(
                 ACHIEVEMENTS_PATH,
@@ -51,92 +40,49 @@ export const AchievementsApp = () => {
           >
             open as file
           </Button>
-        </Stack>
-        <LinearProgress
-          variant="determinate"
+        </div>
+        <Progress
           value={(done / achievements.length) * 100}
           aria-label="achievements unlocked"
-          sx={{ mt: 1, height: 6, borderRadius: 3 }}
+          className={styles.progress}
         />
-      </Box>
+      </div>
 
       {achievementGroups(unlocked).map((group) => (
-        <Box key={group.category} component="section">
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            sx={{ mb: 0.5 }}
-          >
-            <Typography variant="subtitle2" sx={{ fontFamily: monoFont }}>
-              {group.category}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
+        <section key={group.category}>
+          <div className={styles.groupHeader}>
+            <h6 className="t-subtitle2 t-mono">{group.category}</h6>
+            <span className="t-caption t-secondary">
               {group.done} / {group.rows.length}
-            </Typography>
-          </Stack>
-          <Stack
-            component="ul"
-            sx={{ m: 0, p: 0, listStyle: "none" }}
-            divider={
-              <Box
-                sx={{
-                  borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              />
-            }
-          >
+            </span>
+          </div>
+          <ul className={styles.rows}>
             {group.rows.map(({ def, unlockedAt }) => {
               const secret = !unlockedAt && def.hidden;
               return (
-                <Stack
+                <li
                   key={def.id}
-                  component="li"
-                  direction="row"
-                  alignItems="center"
-                  spacing={1.5}
-                  sx={{ py: 1, opacity: unlockedAt ? 1 : 0.6 }}
+                  className={cx(styles.row, !unlockedAt && styles.locked)}
                 >
-                  <Box
-                    sx={{
-                      display: "grid",
-                      placeItems: "center",
-                      flexShrink: 0,
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
-                      color: unlockedAt ? "primary.main" : "text.secondary",
-                      backgroundColor: (theme) =>
-                        alpha(
-                          unlockedAt
-                            ? theme.palette.primary.main
-                            : theme.palette.text.primary,
-                          unlockedAt ? 0.15 : 0.06,
-                        ),
-                    }}
-                  >
+                  <span className={styles.badge}>
                     {unlockedAt ? (
-                      <EmojiEventsIcon sx={{ fontSize: 16 }} />
+                      <TrophyIcon style={{ fontSize: 16 }} />
                     ) : (
-                      <LockOutlinedIcon sx={{ fontSize: 15 }} />
+                      <LockIcon style={{ fontSize: 15 }} />
                     )}
-                  </Box>
-                  <Box sx={{ minWidth: 0, flexGrow: 1 }}>
-                    <Typography variant="body2" sx={{ fontFamily: monoFont }}>
+                  </span>
+                  <div className={styles.details}>
+                    <p className="t-body2 t-mono">
                       {secret ? "???" : def.name}
-                    </Typography>
+                    </p>
                     {(!secret || (def.hint && hinted[def.id])) && (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: "block" }}
-                      >
+                      <span className={`t-caption t-secondary ${styles.block}`}>
                         {secret ? def.hint : def.description}
-                      </Typography>
+                      </span>
                     )}
-                  </Box>
+                  </div>
                   {secret && def.hint && (
                     <Button
-                      size="small"
                       aria-expanded={!!hinted[def.id]}
                       onClick={() =>
                         setHinted((current) => ({
@@ -144,26 +90,22 @@ export const AchievementsApp = () => {
                           [def.id]: !current[def.id],
                         }))
                       }
-                      sx={{ flexShrink: 0 }}
+                      className={styles.fixed}
                     >
                       {hinted[def.id] ? "hide" : "hint"}
                     </Button>
                   )}
                   {unlockedAt && (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ flexShrink: 0 }}
-                    >
+                    <span className={`t-caption t-secondary ${styles.fixed}`}>
                       {formatDate(unlockedAt)}
-                    </Typography>
+                    </span>
                   )}
-                </Stack>
+                </li>
               );
             })}
-          </Stack>
-        </Box>
+          </ul>
+        </section>
       ))}
-    </Stack>
+    </div>
   );
 };

@@ -1,0 +1,72 @@
+.achievements {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.progress {
+  margin-top: 8px;
+}
+
+.groupHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--divider);
+}
+
+.locked {
+  opacity: 0.6;
+}
+
+.badge {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--primary);
+  background-color: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.locked .badge {
+  color: var(--text-2);
+  background-color: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.details {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.block {
+  display: block;
+}
+
+.fixed {
+  flex-shrink: 0;
+}

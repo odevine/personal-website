@@ -1,6 +1,3 @@
-import { PaletteMode } from "@mui/material";
-import { createTheme, Theme } from "@mui/material/styles";
-
 import { Settings, defaultSettings } from "@/settings";
 
 // Syntax-highlight roles, mapped onto the Monokai accents below. Used to give
@@ -15,15 +12,6 @@ export type SyntaxToken =
   | "punctuation";
 
 export type SyntaxPalette = Record<SyntaxToken, string>;
-
-declare module "@mui/material/styles" {
-  interface Palette {
-    syntax: SyntaxPalette;
-  }
-  interface PaletteOptions {
-    syntax?: SyntaxPalette;
-  }
-}
 
 // Canonical Monokai Pro filter palettes, lifted from the official color
 // definitions (loctvl842/monokai-pro.nvim). Each filter shares the same set of
@@ -54,8 +42,8 @@ export type ColorScheme = {
   name: string;
   /** Human-readable label shown in the picker. */
   label: string;
-  /** MUI palette mode — only "light" for the Light filter. */
-  mode: PaletteMode;
+  /** Only "light" for the Light filter */
+  mode: "light" | "dark";
   palette: MonokaiPalette;
 };
 
@@ -251,84 +239,74 @@ export const getScheme = (name: string | null): ColorScheme =>
 export const monoFont = '"Noto Mono", monospace';
 const sansFont = '"Inter", system-ui, sans-serif';
 
-/** Build a full MUI theme from a Monokai Pro filter. */
-export const createAppTheme = (
+// MUI's divider and state overlays, kept so the palettes look the same as before
+const overlays = {
+  dark: {
+    divider: "rgba(255, 255, 255, 0.12)",
+    disabled: "rgba(255, 255, 255, 0.5)",
+    hover: "rgba(255, 255, 255, 0.08)",
+    selected: "rgba(255, 255, 255, 0.16)",
+    icon: "rgba(255, 255, 255, 0.56)",
+    iconDisabled: "rgba(255, 255, 255, 0.3)",
+  },
+  light: {
+    divider: "rgba(0, 0, 0, 0.12)",
+    disabled: "rgba(0, 0, 0, 0.38)",
+    hover: "rgba(0, 0, 0, 0.04)",
+    selected: "rgba(0, 0, 0, 0.08)",
+    icon: "rgba(0, 0, 0, 0.54)",
+    iconDisabled: "rgba(0, 0, 0, 0.26)",
+  },
+};
+
+/** The CSS custom properties for a Monokai Pro filter and the appearance settings */
+export const themeVars = (
   scheme: ColorScheme,
   settings: Settings = defaultSettings,
-): Theme => {
+): Record<string, string> => {
   const { palette } = scheme;
-  const bodyFont = settings.font === "mono" ? monoFont : sansFont;
-  // visible thumb is 6px wide, so 3px is a full pill
-  const thumbRadius = Math.min(3, settings.radius * 0.3);
+  const overlay = overlays[scheme.mode];
   const accent =
     settings.accent === "default" ? palette.accent6 : palette[settings.accent];
-  return createTheme({
-    typography: {
-      fontFamily: bodyFont,
-      fontSize: settings.fontSize,
-      h1: { fontFamily: monoFont, fontWeight: 600, letterSpacing: "-0.02em" },
-      h2: { fontFamily: monoFont, fontWeight: 600, letterSpacing: "-0.02em" },
-      h3: { fontFamily: monoFont, fontWeight: 600, letterSpacing: "-0.02em" },
-      h4: { fontFamily: monoFont, fontWeight: 600 },
-      h5: { fontFamily: monoFont, fontWeight: 600 },
-      h6: { fontFamily: monoFont },
-      button: { fontFamily: monoFont, textTransform: "none" },
-      caption: { fontSize: "0.8125rem", lineHeight: 1.6 },
-    },
-    shape: { borderRadius: settings.radius },
-    palette: {
-      mode: scheme.mode,
-      primary: { main: accent },
-      secondary: { main: palette.accent5 },
-      background: {
-        default: palette.dark1,
-        paper: palette.background,
-      },
-      text: {
-        primary: palette.text,
-        secondary: palette.dimmed1,
-      },
-      syntax: {
-        keyword: palette.accent1, // pink/red — keyword-like segments
-        fn: palette.accent4, // green — primary identifiers
-        string: palette.accent3, // yellow — string-like tails (e.g. .dev)
-        number: palette.accent6, // purple — constant-like segments
-        operator: palette.accent2, // orange — operators (@)
-        variable: palette.text, // default identifier color
-        punctuation: palette.dimmed2, // muted — separators (., space)
-      },
-    },
-    components: {
-      MuiCssBaseline: {
-        styleOverrides: {
-          "*::-webkit-scrollbar": { width: 12, height: 12 },
-          "*::-webkit-scrollbar-track, *::-webkit-scrollbar-corner": {
-            backgroundColor: "transparent",
-          },
-          // The transparent border insets the thumb, and its rounding follows the corner radius
-          "*::-webkit-scrollbar-thumb": {
-            backgroundColor: palette.dimmed4,
-            backgroundClip: "padding-box",
-            border: "3px solid transparent",
-            borderRadius: thumbRadius > 0 ? thumbRadius + 3 : 0,
-            minHeight: 32,
-            minWidth: 32,
-          },
-          "*::-webkit-scrollbar-thumb:hover, *::-webkit-scrollbar-thumb:active":
-            { backgroundColor: palette.dimmed3 },
-          "@supports not selector(::-webkit-scrollbar)": {
-            "*": {
-              scrollbarWidth: "thin",
-              scrollbarColor: `${palette.dimmed4} transparent`,
-            },
-          },
-        },
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: { textTransform: "none" },
-        },
-      },
-    },
-  });
+  // visible scrollbar thumb is 6px wide, so 3px is a full pill, plus the 3px inset border
+  const thumb = Math.min(3, settings.radius * 0.3);
+  const syntax: SyntaxPalette = {
+    keyword: palette.accent1,
+    fn: palette.accent4,
+    string: palette.accent3,
+    number: palette.accent6,
+    operator: palette.accent2,
+    variable: palette.text,
+    punctuation: palette.dimmed2,
+  };
+  return {
+    "--bg": palette.dark1,
+    "--paper": palette.background,
+    "--dark2": palette.dark2,
+    "--text": palette.text,
+    "--text-2": palette.dimmed1,
+    "--text-disabled": overlay.disabled,
+    "--divider": overlay.divider,
+    "--hover": overlay.hover,
+    "--selected": overlay.selected,
+    "--icon": overlay.icon,
+    "--icon-disabled": overlay.iconDisabled,
+    "--primary": accent,
+    "--secondary": palette.accent5,
+    "--dimmed2": palette.dimmed2,
+    "--dimmed3": palette.dimmed3,
+    "--dimmed4": palette.dimmed4,
+    ...Object.fromEntries(
+      Object.entries(syntax).map(([token, color]) => [`--syntax-${token}`, color]),
+    ),
+    "--radius": `${settings.radius}px`,
+    "--thumb-radius": `${thumb > 0 ? thumb + 3 : 0}px`,
+    "--font-body": settings.font === "mono" ? monoFont : sansFont,
+    "--fs": String(settings.fontSize / 14),
+    "--window-opacity": `${settings.windowOpacity * 100}%`,
+    "--window-glow": String(settings.windowGlow),
+    "--backdrop-strength": String(
+      (scheme.mode === "light" ? 0.75 : 1) * settings.backdropIntensity,
+    ),
+  };
 };

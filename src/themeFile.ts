@@ -23,6 +23,7 @@ export const themeFileText = (scheme: string, settings: Settings): string =>
       fontSize: settings.fontSize,
       radius: settings.radius,
       windowOpacity: round(settings.windowOpacity),
+      windowGlow: round(settings.windowGlow),
       background: settings.background,
       backdropGlow: round(settings.backdropIntensity),
       backdropSpeed: round(settings.backdropSpeed),
@@ -73,6 +74,7 @@ const known = [
   "fontSize",
   "radius",
   "windowOpacity",
+  "windowGlow",
   "background",
   "backdropGlow",
   "backdropSpeed",
@@ -127,6 +129,9 @@ export const parseThemeFile = (text: string): ThemeFileParse => {
       "windowOpacity",
       range("windowOpacity", input.windowOpacity, 0.5, 1, warnings),
     );
+  }
+  if (has("windowGlow")) {
+    set("windowGlow", range("windowGlow", input.windowGlow, 0, 2, warnings));
   }
   if (has("background")) {
     set(

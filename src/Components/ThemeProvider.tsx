@@ -1,14 +1,13 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   PropsWithChildren,
 } from "react";
-import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { CssBaseline, GlobalStyles } from "@mui/material";
 
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
   Settings,
   defaultSettings,
@@ -18,12 +17,7 @@ import {
 import { nodeExists } from "@/content/filesystem";
 import { useFilesystemVersion } from "@/content/useFilesystem";
 import { ThemeContext } from "@/ThemeContext";
-import {
-  colorSchemes,
-  createAppTheme,
-  getScheme,
-  monochromeScheme,
-} from "@/themes";
+import { colorSchemes, getScheme, monochromeScheme, themeVars } from "@/themes";
 
 const STORAGE_KEY = "theme";
 
@@ -71,6 +65,7 @@ export const ThemeProvider = (props: PropsWithChildren) => {
             background: "none",
             backdropIntensity: 0,
             windowOpacity: 1,
+            windowGlow: 0,
             reduceMotion: true,
           }
         : {
@@ -84,9 +79,13 @@ export const ThemeProvider = (props: PropsWithChildren) => {
     saveSettings(settings);
   }, [settings]);
 
+  // the stylesheet reads these flags to strip motion, styling or fonts
   useEffect(() => {
-    document.documentElement.dataset.reduceMotion = String(shown.reduceMotion);
-  }, [shown.reduceMotion]);
+    const { dataset } = document.documentElement;
+    dataset.reduceMotion = String(shown.reduceMotion);
+    dataset.themeMissing = String(themeMissing);
+    dataset.fontsMissing = String(fontsMissing);
+  }, [shown.reduceMotion, themeMissing, fontsMissing]);
 
   const updateSettings = useCallback(
     (changes: Partial<Settings>) =>
@@ -115,86 +114,18 @@ export const ThemeProvider = (props: PropsWithChildren) => {
     [scheme, shown, updateSettings, resetSettings, themeMissing],
   );
 
-  const theme = useMemo(
-    () =>
-      createAppTheme(
-        themeMissing ? monochromeScheme : getScheme(scheme),
-        shown,
-      ),
-    [scheme, shown, themeMissing],
-  );
+  useLayoutEffect(() => {
+    const active = themeMissing ? monochromeScheme : getScheme(scheme);
+    const root = document.documentElement;
+    for (const [name, value] of Object.entries(themeVars(active, shown))) {
+      root.style.setProperty(name, value);
+    }
+    root.style.colorScheme = active.mode;
+  }, [scheme, shown, themeMissing]);
 
   return (
     <ThemeContext.Provider value={colorMode}>
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline />
-        {shown.reduceMotion && (
-          <GlobalStyles
-            styles={{
-              "*, *::before, *::after": {
-                animationDuration: "0.001ms !important",
-                animationIterationCount: "1 !important",
-                transitionDuration: "0.001ms !important",
-              },
-            }}
-          />
-        )}
-        {themeMissing && (
-          <GlobalStyles
-            styles={{
-              // everything is black on white, square, one size and with no hover effects, like a page with no stylesheet
-              "html, body, body *, body *::before, body *::after": {
-                backgroundColor: "#fff !important",
-                backgroundImage: "none !important",
-                color: "#000 !important",
-                borderColor: "#000 !important",
-                borderRadius: "0 !important",
-                boxShadow: "none !important",
-                textShadow: "none !important",
-                backdropFilter: "none !important",
-                letterSpacing: "normal !important",
-                fontFamily: '"Courier New", Courier, monospace !important',
-                fontSize: "1rem !important",
-                fontWeight: "normal !important",
-                fontStyle: "normal !important",
-                textTransform: "none !important",
-                outlineColor: "#000 !important",
-                // nothing fades, animates, or changes the pointer, so hovering shows nothing new
-                opacity: "1 !important",
-                transition: "none !important",
-                animation: "none !important",
-                cursor: "auto !important",
-              },
-              // the dock lift and tooltips only appear on hover, and ripples would paint over icons
-              "body [data-dock-app]:hover": { transform: "none" },
-              "body .MuiTooltip-popper, body .MuiTouchRipple-root": {
-                display: "none !important",
-              },
-              "body a": {
-                color: "#0000ee !important",
-                textDecoration: "underline !important",
-              },
-              "body button, body input": {
-                border: "1px solid #000 !important",
-              },
-            }}
-          />
-        )}
-        {fontsMissing && (
-          <GlobalStyles
-            styles={{
-              "body, body *": {
-                fontFamily: '"Times New Roman", Times, serif !important',
-              },
-              a: {
-                color: "#0000ee !important",
-                textDecoration: "underline !important",
-              },
-            }}
-          />
-        )}
-        {props.children}
-      </MuiThemeProvider>
+      {props.children}
     </ThemeContext.Provider>
   );
 };

@@ -1,0 +1,68 @@
+.desktop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg);
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* large soft shapes in the accent color that drift on slow, unsynchronized loops */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(
+      in srgb,
+      var(--primary) calc(var(--blob-alpha) * var(--backdrop-strength) * 100%),
+      transparent
+    ),
+    transparent
+  );
+  will-change: transform;
+  animation-name: drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: var(--from);
+  }
+
+  33% {
+    transform: var(--mid);
+  }
+
+  66% {
+    transform: var(--to);
+  }
+}
+
+.dots {
+  background-image: radial-gradient(var(--divider) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.grid {
+  background-image:
+    linear-gradient(var(--divider) 1px, transparent 1px),
+    linear-gradient(90deg, var(--divider) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.area {
+  position: relative;
+  flex-grow: 1;
+  min-height: 0;
+  isolation: isolate;
+}

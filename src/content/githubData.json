@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06T14:16:14.798Z",
+  "generatedAt": "2026-11-07T13:00:04.269Z",
   "repos": {
     "odevine/edh-tracker": {
       "description": "Deck and match management tool for MtG Commander pods",
@@ -15,8 +15,8 @@
     "odevine/personal-website": {
       "description": null,
       "language": "TypeScript",
-      "pushedAt": "2026-11-05T14:39:42Z",
-      "sizeKb": 3131,
+      "pushedAt": "2026-11-06T14:16:15Z",
+      "sizeKb": 3132,
       "stars": 1,
       "url": "https://github.com/odevine/personal-website",
       "defaultBranch": "main",
